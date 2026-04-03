@@ -62,7 +62,7 @@ export default function PageNavigationBottomSheet({
                 },
               ]}
             >
-              Page {item}
+              Volume {item}
             </Text>
           </View>
         </Pressable>
