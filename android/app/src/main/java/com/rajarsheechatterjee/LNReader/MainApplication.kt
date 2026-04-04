@@ -19,6 +19,13 @@ import com.rajarsheechatterjee.NativeTTSMediaControl.NativeTTSMediaControlPackag
 import com.rajarsheechatterjee.NativeZipArchive.NativeZipArchivePackage
 import expo.modules.ApplicationLifecycleDispatcher
 
+import com.facebook.react.modules.network.OkHttpClientProvider
+import com.facebook.react.modules.network.OkHttpClientFactory
+import okhttp3.OkHttpClient
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.dnsoverhttps.DnsOverHttps
+import java.net.InetAddress
+
 class MainApplication : Application(), ReactApplication {
     override val reactNativeHost: ReactNativeHost =
         object : DefaultReactNativeHost(this) {
@@ -43,6 +50,24 @@ class MainApplication : Application(), ReactApplication {
  
     override fun onCreate() {
         super.onCreate()
+
+        OkHttpClientProvider.setOkHttpClientFactory(object : OkHttpClientFactory {
+            override fun createNewNetworkModuleClient(): OkHttpClient {
+                val builder = OkHttpClientProvider.createClientBuilder()
+                val dns = DnsOverHttps.Builder().client(builder.build())
+                    .url("https://cloudflare-dns.com/dns-query".toHttpUrl())
+                    .bootstrapDnsHosts(
+                        InetAddress.getByName("1.1.1.1"),
+                        InetAddress.getByName("1.0.0.1"),
+                        InetAddress.getByName("2606:4700:4700::1111"),
+                        InetAddress.getByName("2606:4700:4700::1001")
+                    )
+                    .build()
+                builder.dns(dns)
+                return builder.build()
+            }
+        })
+
         loadReactNative(this)
         ApplicationLifecycleDispatcher.onApplicationCreate(this)
     }
