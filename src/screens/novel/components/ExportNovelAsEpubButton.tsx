@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Portal } from 'react-native-paper';
 import { StatusBar, StyleProp, ViewStyle } from 'react-native';
 
-import EpubBuilder from '@cd-z/react-native-epub-creator';
+import EpubBuilder from '@modules/react-native-epub-creator';
 import NativeFile from '@specs/NativeFile';
 
 import { NovelInfo } from '@database/types';

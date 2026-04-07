@@ -27,6 +27,7 @@ module.exports = function (api) {
             '@type': './src/type',
             '@specs': './specs',
             '@test-utils': './__tests-modules__/test-utils',
+            '@modules': './src/modules',
             'react-native-vector-icons/MaterialCommunityIcons':
               '@react-native-vector-icons/material-design-icons',
           },
