@@ -59,12 +59,20 @@ const updateNovelMetadata = async (
 };
 
 /**
- * Update only the total pages count for a novel.
+ * Update only the necessary information for a novel.
  */
-const updateNovelTotalPages = async (novelId: number, totalPages: number) => {
+const updateNovelNecessaryInfo = async (novelId: number, novel: SourceNovel) => {
+  const { totalPages, status } = novel;
+  const data: Record<string, any> = {};
+  if (totalPages) {
+    data.totalPages = totalPages;
+  }
+  if (status) {
+    data.status = status;
+  }
   await dbManager.write(async tx => {
     tx.update(novelSchema)
-      .set({ totalPages })
+      .set(data)
       .where(eq(novelSchema.id, novelId))
       .run();
   });
@@ -192,9 +200,8 @@ const updateNovel = async (
 
   if (refreshNovelMetadata) {
     await updateNovelMetadata(pluginId, novelId, novel);
-  } else if (novel.totalPages) {
-    await updateNovelTotalPages(novelId, novel.totalPages);
-    await updateNovelTotalPages(novelId, novel.totalPages);
+  } else {
+    await updateNovelNecessaryInfo(novelId, novel);
   }
 
   await updateNovelChapters(
