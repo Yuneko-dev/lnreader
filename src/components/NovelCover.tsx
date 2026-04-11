@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   title: {
-    fontFamily: 'pt-sans-bold',
+    fontFamily: 'ArchivoNarrow-Bold',
     fontSize: 14,
     padding: 8,
   },

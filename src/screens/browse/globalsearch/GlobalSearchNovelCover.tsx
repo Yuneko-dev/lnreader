@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flexWrap: 'wrap',
-    fontFamily: 'pt-sans-bold',
+    fontFamily: 'ArchivoNarrow-Bold',
     fontSize: 14,
     padding: 4,
     width: 115,
