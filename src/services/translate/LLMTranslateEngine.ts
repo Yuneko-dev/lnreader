@@ -107,8 +107,7 @@ export class LLMTranslateEngine implements TranslateEngine {
       })
       : null;
 
-    let id = Math.random().toString(36).substring(2, 15);
-    const logId = `TranslateLLM: [${id}] | Time`
+    const logId = `TranslateLLM: [${Math.random().toString(36).substring(2, 15)}] | Time`
     console.time(logId);
 
     try {
