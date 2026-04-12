@@ -31,7 +31,8 @@
     "recreateDBIndexes": "Recreate DB indexes",
     "recreateDBIndexesToast": "Recreated DB indexes",
     "recreateDBIndexesDialogTitle": "All DB indexes will be recreated.\nThis may take a while.",
-    "recreateDBIndexesDesc": "Recreates DB indexes. This may improve performance on slower devices."
+    "recreateDBIndexesDesc": "Recreates DB indexes. This may improve performance on slower devices.",
+    "developer": "Developer"
   },
   "appearance": "Appearance",
   "appearanceScreen": {
@@ -545,7 +546,44 @@
     "title": "Statistics",
     "titlesInLibrary": "Titles in library",
     "totalChapters": "Total chapters",
-    "unreadChapters": "Unread chapters"
+    "unreadChapters": "Unread chapters",
+    "totalReadingTime": "Total reading time"
+  },
+  "securitySettings": "Security",
+  "securitySettingsScreen": {
+    "appLockSection": "App Lock",
+    "appLock": "Lock app",
+    "appLockDesc": "Require biometric or device password to open",
+    "lockOnBackground": "Lock when backgrounded",
+    "always": "Always",
+    "after1Min": "After 1 minute",
+    "after2Min": "After 2 minutes",
+    "after5Min": "After 5 minutes",
+    "after10Min": "After 10 minutes",
+    "never": "Never",
+    "privacySection": "Privacy",
+    "screenProtection": "Screen protection",
+    "screenProtectionDesc": "Hide content in multitasking and block screenshots",
+    "incognitoOnly": "Incognito mode only",
+    "unlock": "Unlock",
+    "authPrompt": "Authenticate to unlock LNReader",
+    "authFallback": "Use device password",
+    "credentialsRevokedTitle": "App Lock Disabled",
+    "credentialsRevokedDesc": "Biometric or device password has been changed or removed. App lock has been automatically disabled for your security."
+  },
+  "debugLogScreen": {
+    "title": "Debug Log",
+    "desc": "View application logs in real-time",
+    "copyAll": "Copy All",
+    "entries": "entries"
+  },
+  "backupLogScreen": {
+    "title": "Backup Log",
+    "desc": "View backup/restore progress logs",
+    "debugSection": "Debug",
+    "noLogs": "No backup logs yet. Start a backup or restore operation.",
+    "cancelBackup": "Cancel Backup",
+    "backupCancelled": "Backup cancelled"
   },
   "tracking": "Tracking",
   "trackingScreen": {

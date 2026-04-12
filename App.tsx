@@ -4,7 +4,7 @@ import { enableFreeze } from 'react-native-screens';
 enableFreeze(true);
 
 import React, { Suspense, useEffect } from 'react';
-import { StatusBar, StyleSheet } from 'react-native';
+import { NativeModules, StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import LottieSplashScreen from 'react-native-lottie-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -18,6 +18,12 @@ import AppErrorBoundary, {
 import Main from './src/navigators/Main';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useInitDatabase } from '@database/db';
+import AppLockOverlay, { useAppLock } from '@screens/more/AppLockScreen';
+import DebugLogService from '@services/DebugLogService';
+import { useSecuritySettings, useLibrarySettings } from '@hooks/persisted/useSettings';
+
+// Install debug log interceptor
+DebugLogService.install();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => {
@@ -30,6 +36,52 @@ Notifications.setNotificationHandler({
   },
 });
 
+/**
+ * Manages FLAG_SECURE for screen protection.
+ */
+const useScreenProtection = () => {
+  const { screenProtection } = useSecuritySettings();
+  const { incognitoMode } = useLibrarySettings();
+
+  useEffect(() => {
+    try {
+      const FlagSecure = NativeModules.FlagSecure;
+      if (!FlagSecure) {
+        return;
+      }
+
+      const shouldProtect =
+        screenProtection === 'always' ||
+        (screenProtection === 'incognito' && incognitoMode);
+
+      if (shouldProtect) {
+        FlagSecure.activate();
+      } else {
+        FlagSecure.deactivate();
+      }
+    } catch {
+      // Module not available
+    }
+  }, [screenProtection, incognitoMode]);
+};
+
+const AppContent = () => {
+  const { isLocked, isCredentialsRevoked, authenticate, dismissRevoked } =
+    useAppLock();
+  useScreenProtection();
+
+  return (
+    <>
+      <Main />
+      <AppLockOverlay
+        isLocked={isLocked}
+        onAuthenticate={authenticate}
+        isCredentialsRevoked={isCredentialsRevoked}
+        onDismissRevoked={dismissRevoked}
+      />
+    </>
+  );
+};
 
 const App = () => {
   const state = useInitDatabase();
@@ -52,7 +104,7 @@ const App = () => {
             <PaperProvider>
               <BottomSheetModalProvider>
                 <StatusBar translucent={true} backgroundColor="transparent" />
-                <Main />
+                <AppContent />
               </BottomSheetModalProvider>
             </PaperProvider>
           </SafeAreaProvider>

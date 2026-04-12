@@ -35,6 +35,7 @@ class MainApplication : Application(), ReactApplication {
                     add(NativeTTSMediaControlPackage())
                     add(NativeVolumeButtonListenerPackage())
                     add(NativeZipArchivePackage())
+                    add(FlagSecurePackage())
                 }
 
             override fun getJSMainModuleName(): String = "index"

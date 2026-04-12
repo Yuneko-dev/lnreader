@@ -85,6 +85,9 @@ export default class ServiceManager {
 
   private constructor() {}
 
+  /** Abort controller for the currently executing task */
+  private currentAbortController: AbortController | null = null;
+
   static get manager() {
     if (!this.instance) {
       this.instance = new ServiceManager();
@@ -237,27 +240,56 @@ export default class ServiceManager {
     this.lastNotifUpdate = Date.now();
     this.currentPendingUpdate = 0;
 
-    switch (task.task.name) {
-      case 'IMPORT_EPUB':
-        return importEpub(task.task.data, this.setMeta.bind(this));
-      case 'UPDATE_LIBRARY':
-        return updateLibrary(task.task.data || {}, this.setMeta.bind(this));
-      case 'DRIVE_BACKUP':
-        return createDriveBackup(task.task.data, this.setMeta.bind(this));
-      case 'DRIVE_RESTORE':
-        return driveRestore(task.task.data, this.setMeta.bind(this));
-      case 'SELF_HOST_BACKUP':
-        return createSelfHostBackup(task.task.data, this.setMeta.bind(this));
-      case 'SELF_HOST_RESTORE':
-        return selfHostRestore(task.task.data, this.setMeta.bind(this));
-      case 'LOCAL_BACKUP':
-        return createBackup(this.setMeta.bind(this));
-      case 'LOCAL_RESTORE':
-        return restoreBackup(this.setMeta.bind(this));
-      case 'MIGRATE_NOVEL':
-        return migrateNovel(task.task.data, this.setMeta.bind(this));
-      case 'DOWNLOAD_CHAPTER':
-        return downloadChapter(task.task.data, this.setMeta.bind(this));
+    // Create abort controller for this task
+    this.currentAbortController = new AbortController();
+    const signal = this.currentAbortController.signal;
+
+    try {
+      switch (task.task.name) {
+        case 'IMPORT_EPUB':
+          return await importEpub(task.task.data, this.setMeta.bind(this));
+        case 'UPDATE_LIBRARY':
+          return await updateLibrary(
+            task.task.data || {},
+            this.setMeta.bind(this),
+          );
+        case 'DRIVE_BACKUP':
+          return await createDriveBackup(
+            task.task.data,
+            this.setMeta.bind(this),
+          );
+        case 'DRIVE_RESTORE':
+          return await driveRestore(
+            task.task.data,
+            this.setMeta.bind(this),
+          );
+        case 'SELF_HOST_BACKUP':
+          return await createSelfHostBackup(
+            task.task.data,
+            this.setMeta.bind(this),
+          );
+        case 'SELF_HOST_RESTORE':
+          return await selfHostRestore(
+            task.task.data,
+            this.setMeta.bind(this),
+          );
+        case 'LOCAL_BACKUP':
+          return await createBackup(this.setMeta.bind(this), signal);
+        case 'LOCAL_RESTORE':
+          return await restoreBackup(this.setMeta.bind(this));
+        case 'MIGRATE_NOVEL':
+          return await migrateNovel(
+            task.task.data,
+            this.setMeta.bind(this),
+          );
+        case 'DOWNLOAD_CHAPTER':
+          return await downloadChapter(
+            task.task.data,
+            this.setMeta.bind(this),
+          );
+      }
+    } finally {
+      this.currentAbortController = null;
     }
   }
 
@@ -441,7 +473,14 @@ export default class ServiceManager {
 
   removeTasksByName(name: BackgroundTask['name']) {
     const taskList = this.getTaskList();
-    if (taskList[0]?.task?.name === name) {
+    const isCurrentTask = taskList[0]?.task?.name === name;
+
+    // Abort the currently running task if it matches
+    if (isCurrentTask && this.currentAbortController) {
+      this.currentAbortController.abort();
+    }
+
+    if (isCurrentTask) {
       this.pause();
       setMMKVObject(
         this.STORE_KEY,

@@ -99,6 +99,17 @@ const AdvancedSettings = ({ navigation }: AdvancedSettingsScreenProps) => {
             theme={theme}
           />
         </List.Section>
+        <List.Section>
+          <List.SubHeader theme={theme}>
+            {getString('advancedSettingsScreen.developer')}
+          </List.SubHeader>
+          <List.Item
+            title={getString('debugLogScreen.title')}
+            description={getString('debugLogScreen.desc')}
+            onPress={() => navigation.getParent()?.navigate('DebugLog')}
+            theme={theme}
+          />
+        </List.Section>
       </ScrollView>
       <Portal>
         <ConfirmationDialog

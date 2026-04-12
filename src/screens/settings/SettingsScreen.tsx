@@ -69,6 +69,16 @@ const SettingsScreen = ({ navigation }: SettingsScreenProps) => {
           theme={theme}
         />
         <List.Item
+          title={getString('securitySettings')}
+          icon="shield-lock-outline"
+          onPress={() =>
+            navigation.navigate('SettingsStack', {
+              screen: 'SecuritySettings',
+            })
+          }
+          theme={theme}
+        />
+        <List.Item
           title={getString('common.backup')}
           icon="cloud-upload-outline"
           onPress={() =>

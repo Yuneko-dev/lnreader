@@ -5,6 +5,7 @@ import { useBoolean } from '@hooks';
 import { BackupSettingsScreenProps } from '@navigators/types';
 import GoogleDriveModal from './Components/GoogleDriveModal';
 import SelfHostModal from './Components/SelfHostModal';
+import BackupLogModal from './Components/BackupLogModal';
 import ServiceManager from '@services/ServiceManager';
 import { ScrollView } from 'react-native-gesture-handler';
 import { getString } from '@strings/translations';
@@ -88,6 +89,8 @@ const BackupSettings = ({ navigation }: BackupSettingsScreenProps) => {
         visible={selfHostModalVisible}
         closeModal={closeSelfHostModal}
       />
+      {/* Auto-shows when backup/restore tasks are running */}
+      <BackupLogModal theme={theme} />
     </SafeAreaView>
   );
 };

@@ -127,3 +127,19 @@ export const getNovelStatusFromDb = async (): Promise<LibraryStats> => {
 
   return { status: countBy(statusList) };
 };
+
+/**
+ * Get total reading time (in seconds) for all chapters in library
+ */
+export const getTotalReadingTimeFromDb = async (): Promise<LibraryStats> => {
+  const result = await dbManager
+    .select({
+      totalReadingTime: sql<number>`COALESCE(SUM(${chapterSchema.readDuration}), 0)`,
+    })
+    .from(chapterSchema)
+    .innerJoin(novelSchema, eq(chapterSchema.novelId, novelSchema.id))
+    .where(eq(novelSchema.inLibrary, true))
+    .get();
+
+  return result ?? { totalReadingTime: 0 };
+};

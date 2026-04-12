@@ -39,6 +39,7 @@ export interface ChapterInfo {
   page: string | null;
   progress: number | null;
   position?: number | null;
+  readDuration?: number | null;
 }
 
 export interface DownloadedChapter extends ChapterInfo {
@@ -94,6 +95,7 @@ export interface LibraryStats {
   chaptersUnread?: number;
   chaptersDownloaded?: number;
   sourcesCount?: number;
+  totalReadingTime?: number;
   genres?: Record<string, number>;
   status?: Record<string, number>;
 }

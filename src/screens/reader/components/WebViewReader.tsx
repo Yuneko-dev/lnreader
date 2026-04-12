@@ -33,6 +33,7 @@ import {
   dismissTTSNotification,
   ttsMediaEmitter,
 } from '@utils/ttsNotification';
+import { addReadDuration } from '@database/queries/ChapterQueries';
 
 type WebViewPostEvent = {
   type: string;
@@ -110,6 +111,59 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
   const appStateRef = useRef(AppState.currentState);
   const ttsQueueRef = useRef<string[]>([]);
   const ttsQueueIndexRef = useRef<number>(0);
+
+  // --- Reading time tracking ---
+  const readStartTimeRef = useRef<number | null>(null);
+  const accumulatedReadTimeRef = useRef<number>(0);
+  const chapterIdForReadTimeRef = useRef<number>(chapter.id);
+
+  // Start reading timer
+  const startReadTimer = () => {
+    if (!readStartTimeRef.current && !isTTSReadingRef.current) {
+      readStartTimeRef.current = Date.now();
+    }
+  };
+
+  // Pause reading timer and accumulate
+  const pauseReadTimer = () => {
+    if (readStartTimeRef.current) {
+      const elapsed = Math.floor(
+        (Date.now() - readStartTimeRef.current) / 1000,
+      );
+      accumulatedReadTimeRef.current += elapsed;
+      readStartTimeRef.current = null;
+    }
+  };
+
+  // Save accumulated reading time to DB and reset
+  const saveReadTime = (chId: number) => {
+    pauseReadTimer();
+    const totalSeconds = accumulatedReadTimeRef.current;
+    if (totalSeconds > 0) {
+      addReadDuration(chId, totalSeconds).catch(() => {});
+      accumulatedReadTimeRef.current = 0;
+    }
+  };
+
+  // Start timer on mount
+  useEffect(() => {
+    startReadTimer();
+    return () => {
+      // Save on unmount (leaving reader)
+      saveReadTime(chapterIdForReadTimeRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Track chapter changes — save read time for previous chapter
+  useEffect(() => {
+    if (chapterIdForReadTimeRef.current !== chapter.id) {
+      saveReadTime(chapterIdForReadTimeRef.current);
+      chapterIdForReadTimeRef.current = chapter.id;
+      startReadTimer();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapter.id]);
 
   useEffect(() => {
     readerSettingsRef.current = readerSettings;
@@ -247,26 +301,36 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
       appStateRef.current = nextState;
-      if (nextState === 'active' && isTTSReadingRef.current) {
-        const index = ttsQueueIndexRef.current;
-        webViewRef.current?.injectJavaScript(`
-          if (window.tts && window.tts.allReadableElements) {
-            const idx = ${index};
-            if (idx < tts.allReadableElements.length) {
-              tts.elementsRead = idx;
-              tts.currentElement = tts.allReadableElements[idx];
-              tts.prevElement = null;
-              tts.started = true;
-              tts.reading = true;
-              tts.scrollToElement(tts.currentElement);
-              tts.currentElement.classList.add('highlight');
+      if (nextState === 'active') {
+        // Resume reading timer (only if not TTS)
+        if (!isTTSReadingRef.current) {
+          startReadTimer();
+        }
+        if (isTTSReadingRef.current) {
+          const index = ttsQueueIndexRef.current;
+          webViewRef.current?.injectJavaScript(`
+            if (window.tts && window.tts.allReadableElements) {
+              const idx = ${index};
+              if (idx < tts.allReadableElements.length) {
+                tts.elementsRead = idx;
+                tts.currentElement = tts.allReadableElements[idx];
+                tts.prevElement = null;
+                tts.started = true;
+                tts.reading = true;
+                tts.scrollToElement(tts.currentElement);
+                tts.currentElement.classList.add('highlight');
+              }
             }
-          }
-        `);
+          `);
+        }
+      } else {
+        // Pause reading timer on background/inactive
+        pauseReadTimer();
       }
     });
 
     return () => subscription.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webViewRef]);
 
   const speakText = (text: string) => {
@@ -395,6 +459,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
               }
               if (!isTTSReadingRef.current) {
                 isTTSReadingRef.current = true;
+                pauseReadTimer(); // Stop counting reading time during TTS
                 showTTSNotification({
                   novelName: novel?.name || 'Unknown',
                   chapterName: chapter.name,
@@ -431,14 +496,22 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
               ttsQueueRef.current = [];
               ttsQueueIndexRef.current = 0;
               dismissTTSNotification();
+              startReadTimer(); // Resume reading time tracking
             }
             break;
           case 'tts-state':
             if (event.data && typeof event.data === 'object') {
               const data = event.data as { isReading?: boolean };
               const isReading = data.isReading === true;
+              const wasReading = isTTSReadingRef.current;
               isTTSReadingRef.current = isReading;
               updateTTSPlaybackState(isReading);
+              // Toggle reading timer based on TTS state
+              if (isReading && !wasReading) {
+                pauseReadTimer();
+              } else if (!isReading && wasReading) {
+                startReadTimer();
+              }
             }
             break;
         }

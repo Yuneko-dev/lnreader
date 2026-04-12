@@ -246,6 +246,27 @@ export const updateChapterProgressByIds = async (
   });
 };
 
+/**
+ * Add reading duration (in seconds) to a chapter's total reading time.
+ * This accumulates on top of the existing readDuration value.
+ */
+export const addReadDuration = async (
+  chapterId: number,
+  durationSeconds: number,
+): Promise<void> => {
+  if (durationSeconds <= 0) {
+    return;
+  }
+  await dbManager.write(async tx => {
+    tx.update(chapterSchema)
+      .set({
+        readDuration: sql`COALESCE(${chapterSchema.readDuration}, 0) + ${durationSeconds}`,
+      })
+      .where(eq(chapterSchema.id, chapterId))
+      .run();
+  });
+};
+
 export const bookmarkChapter = async (chapterId: number): Promise<void> => {
   await dbManager.write(async tx => {
     tx.update(chapterSchema)

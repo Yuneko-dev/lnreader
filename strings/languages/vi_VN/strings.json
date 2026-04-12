@@ -31,7 +31,8 @@
     "recreateDBIndexes": "Tạo lại DB indexes",
     "recreateDBIndexesToast": "Đã tạo lại DB indexes",
     "recreateDBIndexesDialogTitle": "Tất cả DB indexes sẽ được tạo lại.\nViệc này có thể mất một lúc.",
-    "recreateDBIndexesDesc": "Tạo lại DB indexes. Việc này có thể cải thiện hiệu năng trên các thiết bị chậm hơn."
+    "recreateDBIndexesDesc": "Tạo lại DB indexes. Việc này có thể cải thiện hiệu năng trên các thiết bị chậm hơn.",
+    "developer": "Nhà phát triển"
   },
   "appearance": "Giao diện",
   "appearanceScreen": {
@@ -545,7 +546,44 @@
     "title": "Thống kê",
     "titlesInLibrary": "Tiêu đề",
     "totalChapters": "Chương",
-    "unreadChapters": "Chương chưa đọc"
+    "unreadChapters": "Chương chưa đọc",
+    "totalReadingTime": "Tổng thời gian đọc"
+  },
+  "securitySettings": "Bảo mật",
+  "securitySettingsScreen": {
+    "appLockSection": "Khóa ứng dụng",
+    "appLock": "Khóa ứng dụng",
+    "appLockDesc": "Yêu cầu sinh trắc học hoặc mật khẩu thiết bị để mở",
+    "lockOnBackground": "Khóa khi chạy nền",
+    "always": "Luôn luôn",
+    "after1Min": "Sau 1 phút",
+    "after2Min": "Sau 2 phút",
+    "after5Min": "Sau 5 phút",
+    "after10Min": "Sau 10 phút",
+    "never": "Không bao giờ",
+    "privacySection": "Quyền riêng tư",
+    "screenProtection": "Bảo vệ màn hình",
+    "screenProtectionDesc": "Ẩn nội dung trong đa nhiệm và chặn chụp màn hình",
+    "incognitoOnly": "Chỉ ở chế độ ẩn danh",
+    "unlock": "Mở khóa",
+    "authPrompt": "Xác thực để mở LNReader",
+    "authFallback": "Dùng mật khẩu thiết bị",
+    "credentialsRevokedTitle": "Khóa ứng dụng đã tắt",
+    "credentialsRevokedDesc": "Sinh trắc học hoặc mật khẩu thiết bị đã bị thay đổi hoặc xóa. Khóa ứng dụng đã được tự động vô hiệu hóa vì lý do bảo mật."
+  },
+  "debugLogScreen": {
+    "title": "Nhật ký gỡ lỗi",
+    "desc": "Xem nhật ký ứng dụng theo thời gian thực",
+    "copyAll": "Sao chép tất cả",
+    "entries": "mục"
+  },
+  "backupLogScreen": {
+    "title": "Nhật ký sao lưu",
+    "desc": "Xem tiến trình sao lưu / khôi phục",
+    "debugSection": "Gỡ lỗi",
+    "noLogs": "Chưa có nhật ký. Hãy bắt đầu sao lưu hoặc khôi phục.",
+    "cancelBackup": "Hủy sao lưu",
+    "backupCancelled": "Đã hủy sao lưu"
   },
   "tracking": "Theo dõi",
   "trackingScreen": {

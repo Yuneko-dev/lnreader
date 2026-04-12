@@ -13,6 +13,7 @@ export const LIBRARY_SETTINGS = 'LIBRARY_SETTINGS';
 export const CHAPTER_GENERAL_SETTINGS = 'CHAPTER_GENERAL_SETTINGS';
 export const CHAPTER_READER_SETTINGS = 'CHAPTER_READER_SETTINGS';
 export const TRANSLATE_SETTINGS = 'TRANSLATE_SETTINGS';
+export const SECURITY_SETTINGS = 'SECURITY_SETTINGS';
 
 export interface AppSettings {
   /**
@@ -370,5 +371,35 @@ export const useTranslateSettings = () => {
   return {
     ...translateSettings,
     setTranslateSettings,
+  };
+};
+
+// --- Security Settings ---
+
+export type LockOnBackground = 'always' | '1min' | '2min' | '5min' | '10min' | 'never';
+export type ScreenProtection = 'always' | 'incognito' | 'never';
+
+export interface SecuritySettings {
+  appLockEnabled: boolean;
+  lockOnBackground: LockOnBackground;
+  screenProtection: ScreenProtection;
+}
+
+const initialSecuritySettings: SecuritySettings = {
+  appLockEnabled: false,
+  lockOnBackground: 'always',
+  screenProtection: 'never',
+};
+
+export const useSecuritySettings = () => {
+  const [securitySettings = initialSecuritySettings, setSettings] =
+    useMMKVObject<SecuritySettings>(SECURITY_SETTINGS);
+
+  const setSecuritySettings = (values: Partial<SecuritySettings>) =>
+    setSettings({ ...securitySettings, ...values });
+
+  return {
+    ...securitySettings,
+    setSecuritySettings,
   };
 };

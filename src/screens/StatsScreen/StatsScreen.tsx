@@ -21,6 +21,7 @@ import {
   getLibraryStatsFromDb,
   getNovelGenresFromDb,
   getNovelStatusFromDb,
+  getTotalReadingTimeFromDb,
 } from '@database/queries/StatsQueries';
 import { Row } from '@components/Common';
 import { overlay } from 'react-native-paper';
@@ -44,6 +45,7 @@ const StatsScreen = () => {
         getChaptersDownloadedCountFromDb(),
         getNovelGenresFromDb(),
         getNovelStatusFromDb(),
+        getTotalReadingTimeFromDb(),
       ]);
       setStats(Object.assign(...res));
     } catch (err) {
@@ -121,6 +123,11 @@ const StatsScreen = () => {
             label={getString('statsScreen.sources')}
             value={stats.sourcesCount}
           />
+          <StatsCard
+            label={getString('statsScreen.totalReadingTime')}
+            value={stats.totalReadingTime}
+            formatValue={formatReadingTime}
+          />
         </Row>
         <Text style={[styles.header, { color: theme.onSurfaceVariant }]}>
           {getString('statsScreen.genreDistribution')}
@@ -149,15 +156,33 @@ const StatsScreen = () => {
 
 export default StatsScreen;
 
-export const StatsCard: React.FC<{ label: string; value?: number }> = ({
-  label,
-  value = 0,
-}) => {
+/**
+ * Format seconds into a human-readable string like "12h 34m" or "45m" or "< 1m"
+ */
+const formatReadingTime = (totalSeconds: number): string => {
+  if (totalSeconds < 60) {
+    return '< 1m';
+  }
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
+};
+
+export const StatsCard: React.FC<{
+  label: string;
+  value?: number;
+  formatValue?: (v: number) => string;
+}> = ({ label, value = 0, formatValue }) => {
   const theme = useTheme();
 
   if (!label) {
     return null;
   }
+
+  const displayValue = formatValue ? formatValue(value) : String(value);
 
   return (
     <View
@@ -170,7 +195,9 @@ export const StatsCard: React.FC<{ label: string; value?: number }> = ({
         },
       ]}
     >
-      <Text style={[styles.statsVal, { color: theme.primary }]}>{value}</Text>
+      <Text style={[styles.statsVal, { color: theme.primary }]}>
+        {displayValue}
+      </Text>
       <Text style={{ color: theme.onSurface }}> {label}</Text>
     </View>
   );

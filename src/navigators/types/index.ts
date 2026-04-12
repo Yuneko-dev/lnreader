@@ -70,6 +70,7 @@ export type MoreStackParamList = {
   Downloads: undefined;
   Categories: undefined;
   Statistics: undefined;
+  DebugLog: undefined;
 };
 
 export type SettingsStackParamList = {
@@ -81,6 +82,7 @@ export type SettingsStackParamList = {
   AppearanceSettings: undefined;
   AdvancedSettings: undefined;
   LibrarySettings: undefined;
+  SecuritySettings: undefined;
   RespositorySettings: { url?: string } | undefined;
 };
 
