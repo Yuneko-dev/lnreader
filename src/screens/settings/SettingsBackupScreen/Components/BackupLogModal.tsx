@@ -14,9 +14,8 @@ import { ThemeColors } from '@theme/types';
 import { getString } from '@strings/translations';
 import { showToast } from '@utils/showToast';
 import DebugLogService, { LogEntry, LogLevel } from '@services/DebugLogService';
-import ServiceManager from '@services/ServiceManager';
+import ServiceManager, { type QueuedBackgroundTask } from '@services/ServiceManager';
 import { useMMKVObject } from 'react-native-mmkv';
-import { QueuedBackgroundTask } from '@services/ServiceManager';
 
 const LEVEL_COLORS: Record<LogLevel, string> = {
   log: '#A0A0A0',

@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 /**
  * DebugLogService - Singleton service that intercepts console.log/warn/error
  * and buffers log entries for display in the Debug Log screen.
@@ -35,32 +37,30 @@ class DebugLogServiceClass {
   /**
    * Install console interceptors. Safe to call multiple times.
    */
-  install() {
+  install = () => {
     if (this.installed) {
       return;
     }
     this.installed = true;
 
-    const self = this;
-
     console.log = (...args: unknown[]) => {
-      self.originalConsole.log(...args);
-      self.addEntry('log', self.formatArgs(args));
+      this.originalConsole.log(...args);
+      this.addEntry('log', this.formatArgs(args));
     };
 
     console.warn = (...args: unknown[]) => {
-      self.originalConsole.warn(...args);
-      self.addEntry('warn', self.formatArgs(args));
+      this.originalConsole.warn(...args);
+      this.addEntry('warn', this.formatArgs(args));
     };
 
     console.error = (...args: unknown[]) => {
-      self.originalConsole.error(...args);
-      self.addEntry('error', self.formatArgs(args));
+      this.originalConsole.error(...args);
+      this.addEntry('error', this.formatArgs(args));
     };
 
     console.info = (...args: unknown[]) => {
-      self.originalConsole.info(...args);
-      self.addEntry('info', self.formatArgs(args));
+      this.originalConsole.info(...args);
+      this.addEntry('info', this.formatArgs(args));
     };
   }
 
