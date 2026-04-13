@@ -153,7 +153,7 @@ export default class ServiceManager {
     ) {
       const now = Date.now();
       if (now - this.lastNotifUpdate > 1000) {
-        const delay = 1000 - now - this.lastNotifUpdate;
+        const delay = 1000 - (now - this.lastNotifUpdate);
         const id = ++this.currentPendingUpdate;
         setTimeout(() => {
           if (this.currentPendingUpdate !== id) {
