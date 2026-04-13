@@ -417,7 +417,13 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
       }}
       onMessage={(ev: { nativeEvent: { data: string } }) => {
         onLogMessage(ev);
-        const event: WebViewPostEvent = JSON.parse(ev.nativeEvent.data);
+        let event: WebViewPostEvent;
+        try {
+          event = JSON.parse(ev.nativeEvent.data);
+        } catch {
+          // Non-JSON message, already handled by onLogMessage
+          return;
+        }
         switch (event.type) {
           case 'tts-queue': {
             const payload = event.data as
