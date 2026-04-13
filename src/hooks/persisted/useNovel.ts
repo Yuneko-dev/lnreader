@@ -33,7 +33,7 @@ import { parseChapterNumber } from '@utils/parseChapterNumber';
 import { showToast } from '@utils/showToast';
 import { NOVEL_STORAGE } from '@utils/Storages';
 import dayjs from 'dayjs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMMKVNumber, useMMKVObject } from 'react-native-mmkv';
 import { useAppSettings } from './useSettings';
 import { TRACKED_NOVEL_PREFIX } from './useTrackedNovel';
@@ -105,6 +105,10 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
     total: number;
     totalChapters?: number;
   }>({ batch: 0, total: 0 });
+
+  // Tracks the maximum batch we have loaded and the maximum we are currently trying to load.
+  // This prevents race conditions and redundant fetch queries across concurrent calls.
+  const batchProgressRef = useRef({ maxBatchLoaded: 0, targetBatch: 0 });
 
   const settingsSort: ChapterOrderKey =
     novelSettings.sort || defaultChapterSort;
@@ -191,7 +195,12 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
 
   const extendChapters = useCallback(
     async (chs: ChapterInfo[]) => {
-      _setChapters(prev => prev.concat(transformChapters(chs)));
+      _setChapters(prev => {
+        const existingIds = new Set(prev.map(c => c.id));
+        const newUniqueChapters = chs.filter(c => !existingIds.has(c.id));
+        if (newUniqueChapters.length === 0) return prev;
+        return prev.concat(transformChapters(newUniqueChapters));
+      });
     },
     [transformChapters],
   );
@@ -267,6 +276,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
         total: Math.floor(chapterCount / 300),
         totalChapters: chapterCount,
       });
+      batchProgressRef.current = { maxBatchLoaded: 0, targetBatch: 0 };
       setChapters(newChapters);
 
       const unread = await _getFirstUnreadChapter(
@@ -290,8 +300,11 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
 
   const getNextChapterBatch = useCallback(async () => {
     const page = pages[pageIndex];
-    const nextBatch = batchInformation.batch + 1;
+    // Calculate next batch based on what we actually fetched, rather than stale state
+    const nextBatch = batchProgressRef.current.targetBatch + 1;
+    
     if (novel && page && nextBatch <= batchInformation.total) {
+      batchProgressRef.current.targetBatch = nextBatch;
       let newChapters: ChapterInfo[] = [];
 
       try {
@@ -306,34 +319,33 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
       } catch (error) {
         console.error('teaser', error);
       }
-      setBatchInformation({ ...batchInformation, batch: nextBatch });
+      batchProgressRef.current.maxBatchLoaded = nextBatch;
+      setBatchInformation(prev => ({
+        ...prev,
+        batch: Math.max(prev.batch, nextBatch),
+      }));
       extendChapters(newChapters);
     }
-  }, [
-    batchInformation,
-    extendChapters,
-    novel,
-    pageIndex,
-    pages,
-    settingsFilter,
-    settingsSort,
-  ]);
+  }, [batchInformation.total, extendChapters, novel, pageIndex, pages, settingsFilter, settingsSort]);
 
   const loadUpToBatch = useCallback(
     async (targetBatch: number) => {
       const page = pages[pageIndex] ?? '1';
-      if (!novel || !page || targetBatch <= batchInformation.batch) {
+      
+      const target = Math.min(targetBatch, batchInformation.total);
+      if (!novel || !page || target <= batchProgressRef.current.targetBatch) {
         return;
       }
 
-      // Load all batches from current + 1 up to targetBatch
+      // Load all batches from the maximum target batch currently in progress + 1 up to target
+      const startBatch = batchProgressRef.current.targetBatch + 1;
+      batchProgressRef.current.targetBatch = target;
+
       for (
-        let batch = batchInformation.batch + 1;
-        batch <= targetBatch;
+        let batch = startBatch;
+        batch <= target;
         batch++
       ) {
-        if (batch > batchInformation.total) break;
-
         let newChapters: ChapterInfo[] = [];
         try {
           newChapters =
@@ -348,12 +360,16 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
           console.error('Error loading batch', batch, error);
         }
 
-        setBatchInformation(prev => ({ ...prev, batch }));
+        batchProgressRef.current.maxBatchLoaded = batch;
+        setBatchInformation(prev => ({ 
+          ...prev, 
+          batch: Math.max(prev.batch, batch) 
+        }));
         extendChapters(newChapters);
       }
     },
     [
-      batchInformation,
+      batchInformation.total,
       extendChapters,
       novel,
       novelSettings.filter,

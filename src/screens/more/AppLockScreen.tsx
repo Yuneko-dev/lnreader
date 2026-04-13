@@ -44,9 +44,6 @@ export const shouldLockApp = (
   if (!appLockEnabled) {
     return false;
   }
-  if (lockOnBackground === 'never') {
-    return false;
-  }
   if (lockOnBackground === 'always') {
     return true;
   }
@@ -54,6 +51,10 @@ export const shouldLockApp = (
   const lastActive = MMKVStorage.getNumber(LAST_ACTIVE_KEY);
   if (!lastActive) {
     return true; // First launch with lock enabled → lock
+  }
+  // If lockOnBackground is never, return false (but we still need to check lastActive)
+  if (lockOnBackground === 'never') {
+    return false;
   }
 
   const elapsed = Date.now() - lastActive;
