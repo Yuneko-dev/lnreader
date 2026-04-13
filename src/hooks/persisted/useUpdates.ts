@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   getDetailedUpdatesFromDb,
   getUpdatedOverviewFromDb,
@@ -60,6 +60,12 @@ export const useUpdates = () => {
     [],
   );
 
+  // Use ref for lastUpdateTime to avoid circular dependency in getUpdates
+  const lastUpdateTimeRef = useRef(lastUpdateTime);
+  useLayoutEffect(() => {
+    lastUpdateTimeRef.current = lastUpdateTime;
+  }, [lastUpdateTime]);
+
   const getUpdates = useCallback(async () => {
     setIsLoading(true);
     getUpdatedOverviewFromDb()
@@ -67,8 +73,10 @@ export const useUpdates = () => {
         setUpdatesOverview(res);
         if (res.length) {
           if (
-            !lastUpdateTime ||
-            dayjs(lastUpdateTime).isBefore(dayjs(res[0].updateDate))
+            !lastUpdateTimeRef.current ||
+            dayjs(lastUpdateTimeRef.current).isBefore(
+              dayjs(res[0].updateDate),
+            )
           ) {
             setLastUpdateTime(res[0].updateDate);
           }
@@ -76,7 +84,7 @@ export const useUpdates = () => {
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setIsLoading(false));
-  }, [lastUpdateTime, setLastUpdateTime]);
+  }, [setLastUpdateTime]);
 
   useFocusEffect(
     useCallback(() => {

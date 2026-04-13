@@ -5,6 +5,7 @@ import {
   LibrarySortOrder,
 } from '@screens/library/constants/constants';
 import { Voice } from 'expo-speech';
+import { useCallback, useMemo } from 'react';
 import { useMMKVObject } from 'react-native-mmkv';
 
 export const APP_SETTINGS = 'APP_SETTINGS';
@@ -255,26 +256,38 @@ export const useAppSettings = () => {
   const [appSettings = initialAppSettings, setSettings] =
     useMMKVObject<AppSettings>(APP_SETTINGS);
 
-  const setAppSettings = (values: Partial<AppSettings>) =>
-    setSettings({ ...appSettings, ...values });
+  const setAppSettings = useCallback(
+    (values: Partial<AppSettings>) =>
+      setSettings(prev => ({ ...initialAppSettings, ...prev, ...values })),
+    [setSettings],
+  );
 
-  return {
-    ...appSettings,
-    setAppSettings,
-  };
+  return useMemo(
+    () => ({
+      ...appSettings,
+      setAppSettings,
+    }),
+    [appSettings, setAppSettings],
+  );
 };
 
 export const useBrowseSettings = () => {
   const [browseSettings = initialBrowseSettings, setSettings] =
     useMMKVObject<BrowseSettings>(BROWSE_SETTINGS);
 
-  const setBrowseSettings = (values: Partial<BrowseSettings>) =>
-    setSettings({ ...browseSettings, ...values });
+  const setBrowseSettings = useCallback(
+    (values: Partial<BrowseSettings>) =>
+      setSettings(prev => ({ ...initialBrowseSettings, ...prev, ...values })),
+    [setSettings],
+  );
 
-  return {
-    ...browseSettings,
-    setBrowseSettings,
-  };
+  return useMemo(
+    () => ({
+      ...browseSettings,
+      setBrowseSettings,
+    }),
+    [browseSettings, setBrowseSettings],
+  );
 };
 
 const defaultLibrarySettings: LibrarySettings = {
@@ -292,26 +305,43 @@ export const useLibrarySettings = () => {
   const [librarySettings, setSettings] =
     useMMKVObject<LibrarySettings>(LIBRARY_SETTINGS);
 
-  const setLibrarySettings = (value: Partial<LibrarySettings>) =>
-    setSettings({ ...librarySettings, ...value });
+  const setLibrarySettings = useCallback(
+    (value: Partial<LibrarySettings>) =>
+      setSettings(prev => ({ ...defaultLibrarySettings, ...prev, ...value })),
+    [setSettings],
+  );
 
-  return {
-    ...{ ...defaultLibrarySettings, ...librarySettings },
-    setLibrarySettings,
-  };
+  return useMemo(
+    () => ({
+      ...defaultLibrarySettings,
+      ...librarySettings,
+      setLibrarySettings,
+    }),
+    [librarySettings, setLibrarySettings],
+  );
 };
 
 export const useChapterGeneralSettings = () => {
   const [chapterGeneralSettings = initialChapterGeneralSettings, setSettings] =
     useMMKVObject<ChapterGeneralSettings>(CHAPTER_GENERAL_SETTINGS);
 
-  const setChapterGeneralSettings = (values: Partial<ChapterGeneralSettings>) =>
-    setSettings({ ...chapterGeneralSettings, ...values });
+  const setChapterGeneralSettings = useCallback(
+    (values: Partial<ChapterGeneralSettings>) =>
+      setSettings(prev => ({
+        ...initialChapterGeneralSettings,
+        ...prev,
+        ...values,
+      })),
+    [setSettings],
+  );
 
-  return {
-    ...chapterGeneralSettings,
-    setChapterGeneralSettings,
-  };
+  return useMemo(
+    () => ({
+      ...chapterGeneralSettings,
+      setChapterGeneralSettings,
+    }),
+    [chapterGeneralSettings, setChapterGeneralSettings],
+  );
 };
 
 export const useChapterReaderSettings = () => {
@@ -365,13 +395,23 @@ export const useTranslateSettings = () => {
   const [translateSettings = initialTranslateSettings, setSettings] =
     useMMKVObject<TranslateSettings>(TRANSLATE_SETTINGS);
 
-  const setTranslateSettings = (values: Partial<TranslateSettings>) =>
-    setSettings({ ...translateSettings, ...values });
+  const setTranslateSettings = useCallback(
+    (values: Partial<TranslateSettings>) =>
+      setSettings(prev => ({
+        ...initialTranslateSettings,
+        ...prev,
+        ...values,
+      })),
+    [setSettings],
+  );
 
-  return {
-    ...translateSettings,
-    setTranslateSettings,
-  };
+  return useMemo(
+    () => ({
+      ...translateSettings,
+      setTranslateSettings,
+    }),
+    [translateSettings, setTranslateSettings],
+  );
 };
 
 // --- Security Settings ---
@@ -395,11 +435,21 @@ export const useSecuritySettings = () => {
   const [securitySettings = initialSecuritySettings, setSettings] =
     useMMKVObject<SecuritySettings>(SECURITY_SETTINGS);
 
-  const setSecuritySettings = (values: Partial<SecuritySettings>) =>
-    setSettings({ ...securitySettings, ...values });
+  const setSecuritySettings = useCallback(
+    (values: Partial<SecuritySettings>) =>
+      setSettings(prev => ({
+        ...initialSecuritySettings,
+        ...prev,
+        ...values,
+      })),
+    [setSettings],
+  );
 
-  return {
-    ...securitySettings,
-    setSecuritySettings,
-  };
+  return useMemo(
+    () => ({
+      ...securitySettings,
+      setSecuritySettings,
+    }),
+    [securitySettings, setSecuritySettings],
+  );
 };
