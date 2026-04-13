@@ -132,7 +132,7 @@ export class TranslateManager {
           $ref.text(translatedTexts[i]);
         }
       } else {
-        console.warn('Translated text is empty, removing element', $ref);
+        console.warn('Translated text is empty, removing element', __DEV__ ? $ref : i);
         $ref.remove();
       }
     }

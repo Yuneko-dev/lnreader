@@ -127,7 +127,7 @@ export class LLMTranslateEngine implements TranslateEngine {
       let resultText = '';
       let errorMessage: string | undefined | null = null;
 
-      console.log('Input', texts, userPrompt);
+      console.log('Input text count:', texts.length);
 
       if (this.config.provider === 'gemini') {
         const ai = this.createClient() as GoogleGenAI;
@@ -197,8 +197,17 @@ export class LLMTranslateEngine implements TranslateEngine {
           ? await Promise.race([apiPromise, abortPromise])
           : await apiPromise;
         resultText = response?.text || '';
-        console.log('Gemini Response', response);
         errorMessage = response.promptFeedback?.blockReason;
+        if (__DEV__) {
+          console.log('Gemini Response Info', response);
+        } else {
+          console.log('Gemini Response Info', {
+            usage: response?.usageMetadata,
+            promptFeedback: response?.promptFeedback,
+            finishReason: response?.candidates?.[0]?.finishReason,
+            modelStatus: response?.modelStatus,
+          });
+        }
       } else {
         const client = this.createClient() as OpenAI;
         let reasoningConfig: OpenAI.Reasoning | undefined = undefined;
@@ -220,7 +229,16 @@ export class LLMTranslateEngine implements TranslateEngine {
           : await apiPromise;
         resultText = response.output_text;
         errorMessage = response.incomplete_details?.reason;
-        console.log('LLM Response', response);
+        if (__DEV__) {
+          console.log('LLM Response Info', response);
+        } else {
+          console.log('LLM Response Info', {
+            usage: response.usage,
+            error: response.error,
+            incomplete_details: response.incomplete_details,
+            status: response.status,
+          });
+        }
       }
 
       if (!resultText.length) {
