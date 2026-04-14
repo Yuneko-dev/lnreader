@@ -187,8 +187,7 @@ export const AvailableTab = memo(({ searchText, theme }: AvailableTabProps) => {
           <View style={styles.margintTop100}>
             <EmptyView
               icon="(･Д･。"
-              description=" No repositories yet. Add your first plugin repository to get
-                started."
+              description={getString('repositories.emptyMsg')}
               actions={[
                 {
                   iconName: 'cog-outline',
