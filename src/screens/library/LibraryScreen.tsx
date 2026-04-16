@@ -73,6 +73,14 @@ type TabViewLabelProps = {
   style?: StyleProp<TextStyle>;
 };
 
+const LIBRARY_TAB_HEIGHT = 46;
+const LIBRARY_TAB_HORIZONTAL_PADDING = 16;
+const LIBRARY_TAB_BAR_HORIZONTAL_PADDING = 8;
+const LIBRARY_TAB_INDICATOR_HEIGHT = 3;
+const LIBRARY_TAB_LABEL_LINE_HEIGHT = 20;
+const LIBRARY_TAB_BADGE_HEIGHT = 20;
+const LIBRARY_TAB_MIN_WIDTH = 72;
+
 const LibraryScreen = ({ navigation }: LibraryScreenProps) => {
   const { searchText, setSearchText, clearSearchbar } = useSearch();
   const theme = useTheme();
@@ -192,13 +200,19 @@ const LibraryScreen = ({ navigation }: LibraryScreenProps) => {
         .string(),
     [theme.isDark],
   );
+  const shouldScrollCategoryTabs = categories.length > 3;
 
   const renderTabBar = useCallback(
     (props: SceneRendererProps & { navigationState: State }) => {
       return categories.length ? (
         <TabBar
           {...props}
-          scrollEnabled
+          scrollEnabled={shouldScrollCategoryTabs}
+          contentContainerStyle={
+            shouldScrollCategoryTabs
+              ? styles.scrollableTabBarContentContainer
+              : undefined
+          }
           indicatorStyle={styles.tabBarIndicator}
           style={[
             {
@@ -207,8 +221,12 @@ const LibraryScreen = ({ navigation }: LibraryScreenProps) => {
             },
             styles.tabBar,
           ]}
-          tabStyle={styles.tabStyle}
-          gap={8}
+          tabStyle={
+            shouldScrollCategoryTabs
+              ? styles.scrollableTabStyle
+              : styles.fixedTabStyle
+          }
+          gap={shouldScrollCategoryTabs ? 4 : 0}
           inactiveColor={theme.secondary}
           activeColor={theme.primary}
           android_ripple={{ color: theme.rippleColor }}
@@ -217,9 +235,12 @@ const LibraryScreen = ({ navigation }: LibraryScreenProps) => {
     },
     [
       categories.length,
+      shouldScrollCategoryTabs,
+      styles.fixedTabStyle,
+      styles.scrollableTabBarContentContainer,
+      styles.scrollableTabStyle,
       styles.tabBar,
       styles.tabBarIndicator,
-      styles.tabStyle,
       tabBarBorderColor,
       theme.primary,
       theme.rippleColor,
@@ -291,12 +312,18 @@ const LibraryScreen = ({ navigation }: LibraryScreenProps) => {
   );
 
   const renderLabel = useCallback(
-    ({ route, color }: TabViewLabelProps) => {
+    ({ route, color, style }: TabViewLabelProps) => {
       const novelIds = route?.novelIds?.filter(id => id !== 0);
 
       return (
-        <Row>
-          <Text style={[{ color }, styles.fontWeight500]}>{route.title}</Text>
+        <Row style={styles.tabLabelContent}>
+          <Text
+            style={[styles.tabLabelText, style, { color }]}
+            numberOfLines={1}
+            ellipsizeMode="clip"
+          >
+            {route.title}
+          </Text>
           {showNumberOfNovels ? (
             <View
               style={[
@@ -318,7 +345,8 @@ const LibraryScreen = ({ navigation }: LibraryScreenProps) => {
       showNumberOfNovels,
       styles.badgeCtn,
       styles.badgetText,
-      styles.fontWeight500,
+      styles.tabLabelContent,
+      styles.tabLabelText,
       theme.onSurfaceVariant,
       theme.surfaceVariant,
     ],
@@ -544,14 +572,20 @@ export default React.memo(LibraryScreen);
 function createStyles(theme: ThemeColors) {
   return StyleSheet.create({
     badgeCtn: {
-      borderRadius: 50,
-      marginStart: 4,
+      alignItems: 'center',
+      borderRadius: LIBRARY_TAB_BADGE_HEIGHT / 2,
+      height: LIBRARY_TAB_BADGE_HEIGHT,
+      justifyContent: 'center',
+      marginStart: 6,
+      minWidth: LIBRARY_TAB_BADGE_HEIGHT,
       paddingHorizontal: 6,
-      paddingVertical: 2,
       position: 'relative',
     },
     badgetText: {
       fontSize: 12,
+      includeFontPadding: false,
+      lineHeight: 14,
+      textAlign: 'center',
     },
     fab: {
       bottom: 0,
@@ -559,23 +593,50 @@ function createStyles(theme: ThemeColors) {
       position: 'absolute',
       end: 0,
     },
-    fontWeight500: {
-      fontWeight: 500,
-    },
     globalSearchBtn: {
       margin: 16,
     },
     tabBar: {
       borderBottomWidth: 1,
       elevation: 0,
+      minHeight: LIBRARY_TAB_HEIGHT,
+    },
+    scrollableTabBarContentContainer: {
+      paddingHorizontal: LIBRARY_TAB_BAR_HORIZONTAL_PADDING,
     },
     tabBarIndicator: {
       backgroundColor: theme.primary,
-      height: 3,
+      borderTopLeftRadius: LIBRARY_TAB_INDICATOR_HEIGHT,
+      borderTopRightRadius: LIBRARY_TAB_INDICATOR_HEIGHT,
+      height: LIBRARY_TAB_INDICATOR_HEIGHT,
     },
-    tabStyle: {
-      minWidth: 100,
+    fixedTabStyle: {
+      minHeight: LIBRARY_TAB_HEIGHT,
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+    },
+    scrollableTabStyle: {
+      justifyContent: 'center',
+      minWidth: LIBRARY_TAB_MIN_WIDTH,
+      minHeight: LIBRARY_TAB_HEIGHT,
+      paddingHorizontal: LIBRARY_TAB_HORIZONTAL_PADDING,
+      paddingVertical: 0,
       width: 'auto',
+    },
+    tabLabelContent: {
+      alignSelf: 'center',
+      alignItems: 'center',
+      flexShrink: 0,
+      justifyContent: 'center',
+      minHeight: LIBRARY_TAB_HEIGHT - LIBRARY_TAB_INDICATOR_HEIGHT,
+    },
+    tabLabelText: {
+      flexShrink: 0,
+      fontSize: 14,
+      fontWeight: '500',
+      includeFontPadding: false,
+      lineHeight: LIBRARY_TAB_LABEL_LINE_HEIGHT,
+      textAlign: 'center',
     },
   });
 }

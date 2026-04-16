@@ -15,6 +15,12 @@ import { MaterialDesignIconName } from '@type/icon';
 import { BottomTabBar } from '@components';
 
 const Tab = createBottomTabNavigator<BottomNavigatorParamList>();
+const TAB_ICON_SIZE = 24;
+const TAB_ICON_STYLE = {
+  includeFontPadding: false,
+  textAlign: 'center' as const,
+  width: TAB_ICON_SIZE,
+};
 
 const BottomNavigator = () => {
   const theme = useTheme();
@@ -54,7 +60,15 @@ const BottomNavigator = () => {
           iconName = 'circle';
       }
 
-      return <Icon name={iconName} color={color} size={24} />;
+      return (
+        <Icon
+          allowFontScaling={false}
+          color={color}
+          name={iconName}
+          size={TAB_ICON_SIZE}
+          style={TAB_ICON_STYLE}
+        />
+      );
     },
     [],
   );

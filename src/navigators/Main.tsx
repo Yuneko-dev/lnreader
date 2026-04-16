@@ -33,6 +33,7 @@ import BrowseSettings from '../screens/browse/settings/BrowseSettings';
 import WebviewScreen from '@screens/WebviewScreen/WebviewScreen';
 import { RootStackParamList } from './types';
 import Color from 'color';
+import * as NavigationBar from 'expo-navigation-bar';
 import { useMMKVBoolean } from 'react-native-mmkv';
 import OnboardingScreen from '@screens/onboarding/OnboardingScreen';
 import ServiceManager from '@services/ServiceManager';
@@ -48,7 +49,8 @@ const MainNavigator = () => {
   const [isOnboarded] = useMMKVBoolean('IS_ONBOARDED');
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
+      NavigationBar.setPositionAsync('relative').catch(() => undefined);
       setStatusBarColor(theme);
       changeNavigationBarColor(Color(theme.surface2).hex(), theme.isDark);
     }, 500);

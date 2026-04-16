@@ -1,10 +1,18 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Pressable, View, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, ViewStyle, View } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeColors } from '@theme/types';
-import Animated from 'react-native-reanimated';
+
+const TAB_BAR_CONTENT_HEIGHT = 68;
+const TAB_ICON_CONTAINER_HEIGHT = 32;
+const TAB_ICON_ACTIVE_WIDTH = 64;
+const TAB_ICON_INACTIVE_WIDTH = 40;
+const TAB_ICON_SLOT_SIZE = 24;
+const TAB_LABEL_HEIGHT = 16;
+const TAB_ICON_LABEL_GAP = 4;
 
 interface CustomBottomTabBarProps extends BottomTabBarProps {
   theme: ThemeColors;
@@ -13,10 +21,12 @@ interface CustomBottomTabBarProps extends BottomTabBarProps {
     color,
     route,
   }: {
-    route: { name: string };
+    route: BottomTabBarProps['state']['routes'][number];
     color: string;
   }) => React.ReactNode;
 }
+
+type TabRoute = BottomTabBarProps['state']['routes'][number];
 
 function CustomBottomTabBar({
   navigation,
@@ -27,9 +37,26 @@ function CustomBottomTabBar({
   showLabelsInNav,
   renderIcon,
 }: CustomBottomTabBarProps) {
+  const safeAreaInsets = useSafeAreaInsets();
+  const safeAreaBottom = Math.max(insets?.bottom ?? 0, safeAreaInsets.bottom);
+  const activeRouteKey = state.routes[state.index]?.key;
+
+  const visibleRoutes = useMemo(
+    () =>
+      state.routes.filter(route => {
+        const { options } = descriptors[route.key];
+        const tabBarItemStyle = StyleSheet.flatten(options.tabBarItemStyle) as
+          | ViewStyle
+          | undefined;
+
+        return tabBarItemStyle?.display !== 'none';
+      }),
+    [descriptors, state.routes],
+  );
+
   const getLabelText = useCallback(
-    (route: any) => {
-      if (!showLabelsInNav && route.name !== state.routeNames[state.index]) {
+    (route: TabRoute) => {
+      if (!showLabelsInNav && route.key !== activeRouteKey) {
         return '';
       }
 
@@ -43,7 +70,7 @@ function CustomBottomTabBar({
 
       return label;
     },
-    [descriptors, showLabelsInNav, state.index, state.routeNames],
+    [activeRouteKey, descriptors, showLabelsInNav],
   );
 
   return (
@@ -52,82 +79,88 @@ function CustomBottomTabBar({
         styles.container,
         {
           backgroundColor: theme.surface2 || theme.surface,
-          paddingBottom: insets?.bottom || 0,
+          paddingBottom: safeAreaBottom,
         },
       ]}
     >
-      {state.routes.map((route, index) => {
-        const label = getLabelText(route);
-        const isFocused = state.index === index;
-        const showLabel = (showLabelsInNav || isFocused) && label;
+      <View style={styles.contentRow}>
+        {visibleRoutes.map(route => {
+          const label = getLabelText(route);
+          const isFocused = route.key === activeRouteKey;
+          const showLabel = Boolean((showLabelsInNav || isFocused) && label);
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
 
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
-          }
-        };
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
 
-        const onLongPress = () => {
-          navigation.emit({
-            type: 'tabLongPress',
-            target: route.key,
-          });
-        };
+          const onLongPress = () => {
+            navigation.emit({
+              type: 'tabLongPress',
+              target: route.key,
+            });
+          };
 
-        const iconColor = isFocused
-          ? theme.onPrimaryContainer
-          : theme.onSurfaceVariant;
+          const iconColor = isFocused
+            ? theme.onPrimaryContainer
+            : theme.onSurfaceVariant;
 
-        return (
-          <Pressable
-            key={route.key}
-            onPress={onPress}
-            onLongPress={onLongPress}
-            style={styles.pressable}
-          >
-            {/* Icon */}
-            <Animated.View
-              style={[
-                styles.iconContainer,
-                {
-                  transitionProperty: ['width', 'backgroundColor'],
-                  transitionDuration: 250,
-                  transitionTimingFunction: 'ease-in-out',
-                  marginBottom: showLabel ? 4 : 20,
-                  width: isFocused ? 64 : 32,
-                  backgroundColor: isFocused
-                    ? theme.primaryContainer
-                    : 'transparent',
-                },
-              ]}
+          return (
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              onLongPress={onLongPress}
+              style={styles.pressable}
             >
-              {renderIcon({ color: iconColor, route })}
-            </Animated.View>
+              <View style={styles.itemContent}>
+                <View
+                  style={[
+                    styles.iconContainer,
+                    {
+                      width: isFocused
+                        ? TAB_ICON_ACTIVE_WIDTH
+                        : TAB_ICON_INACTIVE_WIDTH,
+                      backgroundColor: isFocused
+                        ? theme.primaryContainer
+                        : 'transparent',
+                    },
+                  ]}
+                >
+                  <View style={styles.iconSlot}>
+                    {renderIcon({ color: iconColor, route })}
+                  </View>
+                </View>
 
-            {/* Label */}
-            {showLabel ? (
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: isFocused ? theme.onSurface : theme.onSurfaceVariant,
-                    fontWeight: '500',
-                  },
-                ]}
-                numberOfLines={1}
-              >
-                {label}
-              </Text>
-            ) : null}
-          </Pressable>
-        );
-      })}
+                <View style={styles.labelSlot}>
+                  {showLabel ? (
+                    <Text
+                      style={[
+                        styles.label,
+                        {
+                          color: isFocused
+                            ? theme.onSurface
+                            : theme.onSurfaceVariant,
+                          fontWeight: '500',
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {label}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -137,30 +170,47 @@ export type { CustomBottomTabBarProps };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    paddingTop: 12,
-    paddingBottom: 16,
     paddingHorizontal: 0,
-    minHeight: 80,
+  },
+  contentRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    height: TAB_BAR_CONTENT_HEIGHT,
   },
   pressable: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 6,
     paddingHorizontal: 4,
-    position: 'relative',
+  },
+  itemContent: {
+    alignItems: 'center',
+    height: TAB_ICON_CONTAINER_HEIGHT + TAB_ICON_LABEL_GAP + TAB_LABEL_HEIGHT,
+    justifyContent: 'space-between',
   },
   iconContainer: {
-    display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
-    height: 32,
-    borderRadius: 16,
+    borderRadius: TAB_ICON_CONTAINER_HEIGHT / 2,
+    height: TAB_ICON_CONTAINER_HEIGHT,
+    justifyContent: 'center',
+    marginBottom: TAB_ICON_LABEL_GAP,
+    overflow: 'hidden',
+  },
+  iconSlot: {
+    alignItems: 'center',
+    height: TAB_ICON_SLOT_SIZE,
+    justifyContent: 'center',
+    width: TAB_ICON_SLOT_SIZE,
+  },
+  labelSlot: {
+    alignItems: 'center',
+    height: TAB_LABEL_HEIGHT,
+    justifyContent: 'flex-start',
   },
   label: {
-    height: 16,
     fontSize: 12,
+    lineHeight: TAB_LABEL_HEIGHT,
     textAlign: 'center',
+    includeFontPadding: false,
   },
 });

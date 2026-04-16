@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import WebView from 'react-native-webview';
 import color from 'color';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@hooks/persisted';
 import { getString } from '@strings/translations';
@@ -82,6 +83,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
     webViewRef,
   } = useChapterContext();
   const theme = useTheme();
+  const { bottom } = useSafeAreaInsets();
   // Use state for settings so they update when MMKV changes
   const [readerSettings, setReaderSettings] = useState<ChapterReaderSettings>(
     () =>
@@ -96,6 +98,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [chapter.id],
   );
+  const readerBottomInset = chapterGeneralSettings.fullScreenMode ? 0 : bottom;
 
   // Update readerSettings when chapter changes
   useEffect(() => {
@@ -281,10 +284,16 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
           );
           break;
         case CHAPTER_GENERAL_SETTINGS:
+          const newGeneralSettings =
+            getMMKVObject<ChapterGeneralSettings>(CHAPTER_GENERAL_SETTINGS) ||
+            initialChapterGeneralSettings;
           webViewRef.current?.injectJavaScript(
             `reader.generalSettings.val = ${MMKVStorage.getString(
               CHAPTER_GENERAL_SETTINGS,
-            )}`,
+            )};
+            document.documentElement.style.setProperty('--reader-bottomInset', '${
+              newGeneralSettings.fullScreenMode ? 0 : bottom
+            }px');`,
           );
           break;
       }
@@ -302,7 +311,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
       subscription.remove();
       mmkvListener.remove();
     };
-  }, [webViewRef]);
+  }, [bottom, webViewRef]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
@@ -568,6 +577,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
                 --theme-onSurfaceVariant: ${theme.onSurfaceVariant};
                 --theme-outline: ${theme.outline};
                 --theme-rippleColor: ${theme.rippleColor};
+                --reader-bottomInset: ${readerBottomInset}px;
                 }
                 
                 @font-face {

@@ -17,7 +17,7 @@ html {
 body {
   margin-left: 0;
   margin-right: 0;
-  padding-bottom: 40px;
+  padding-bottom: calc(40px + var(--reader-bottomInset, 0px));
   padding-top: var(--StatusBar-currentHeight);
 
   font-size: var(--readerSettings-textSize);
@@ -117,7 +117,7 @@ td {
 
 #reader-footer-wrapper {
   position: fixed;
-  bottom: 0;
+  bottom: var(--reader-bottomInset, 0px);
   left: 0;
   width: 100%;
   z-index: 9999999;
