@@ -369,8 +369,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
   const bookmarkChapters = useCallback(
     (_chapters: ChapterInfo[]) => {
       const chapterIdSet = new Set(_chapters.map(_c => _c.id));
-      Promise.all(_chapters.map(_chapter => Promise.resolve(_bookmarkChapter(_chapter.id))))
-        .catch(() => showToast(getString('common.error')));
+      Promise.all(_chapters.map(_chapter => _bookmarkChapter(_chapter.id)));
       mutateChapters(chs =>
         chs.map(chapter => {
           if (chapterIdSet.has(chapter.id)) {
@@ -389,8 +388,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
   const markPreviouschaptersRead = useCallback(
     (chapterId: number) => {
       if (novel) {
-        Promise.resolve(_markPreviouschaptersRead(chapterId, novel.id))
-          .catch(() => showToast(getString('common.error')));
+        _markPreviouschaptersRead(chapterId, novel.id);
         mutateChapters(chs =>
           chs.map(chapter =>
             chapter.id <= chapterId ? { ...chapter, unread: false } : chapter,
@@ -403,9 +401,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
 
   const markChapterRead = useCallback(
     (chapterId: number) => {
-      Promise.resolve(_markChapterRead(chapterId))
-        .catch(() => showToast(getString('common.error')));
-
+      _markChapterRead(chapterId);
       mutateChapters(chs =>
         chs.map(c => {
           if (c.id !== chapterId) {
@@ -423,9 +419,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
 
   const updateChapterProgress = useCallback(
     (chapterId: number, progress: number) => {
-      Promise.resolve(_updateChapterProgress(chapterId, Math.min(progress, 100)))
-        .catch(() => showToast(getString('common.error')));
-
+      _updateChapterProgress(chapterId, Math.min(progress, 100));
       mutateChapters(chs =>
         chs.map(c => {
           if (c.id !== chapterId) {
@@ -445,9 +439,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
     (_chapters: ChapterInfo[]) => {
       const chapterIds = _chapters.map(chapter => chapter.id);
       const chapterIdSet = new Set(chapterIds);
-      Promise.resolve(_markChaptersRead(chapterIds))
-        .catch(() => showToast(getString('common.error')));
-
+      _markChaptersRead(chapterIds);
       mutateChapters(chs =>
         chs.map(chapter => {
           if (chapterIdSet.has(chapter.id)) {
@@ -466,8 +458,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
   const markPreviousChaptersUnread = useCallback(
     (chapterId: number) => {
       if (novel) {
-        Promise.resolve(_markPreviousChaptersUnread(chapterId, novel.id))
-          .catch(() => showToast(getString('common.error')));
+        _markPreviousChaptersUnread(chapterId, novel.id);
         mutateChapters(chs =>
           chs.map(chapter =>
             chapter.id <= chapterId ? { ...chapter, unread: true } : chapter,
@@ -482,9 +473,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
     (_chapters: ChapterInfo[]) => {
       const chapterIds = _chapters.map(chapter => chapter.id);
       const chapterIdSet = new Set(chapterIds);
-      Promise.resolve(_markChaptersUnread(chapterIds))
-        .catch(() => showToast(getString('common.error')));
-
+      _markChaptersUnread(chapterIds);
       mutateChapters(chs =>
         chs.map(chapter => {
           if (chapterIdSet.has(chapter.id)) {
