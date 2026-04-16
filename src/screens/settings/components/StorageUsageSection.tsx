@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, InteractionManager } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAppSettings, useTheme } from '@hooks/persisted';
@@ -12,13 +12,30 @@ export default function StorageUsageSection() {
   const theme = useTheme();
   const { clearCacheOnExit, setAppSettings } = useAppSettings();
   const constants = NativeFile.getConstants();
-  
+
   const [cacheSize, setCacheSize] = useState<number>(0);
   const [freeSpace, setFreeSpace] = useState<number>(constants.FreeSpace);
 
+  const interactionTaskRef =
+    useRef<ReturnType<typeof InteractionManager.runAfterInteractions> | null>(
+      null,
+    );
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelPendingFetchStorageInfo = () => {
+    if (interactionTaskRef.current) {
+      interactionTaskRef.current.cancel();
+      interactionTaskRef.current = null;
+    }
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
   const fetchStorageInfo = () => {
-    InteractionManager.runAfterInteractions(() => {
-      setTimeout(() => {
+    cancelPendingFetchStorageInfo();
+    interactionTaskRef.current = InteractionManager.runAfterInteractions(() => {
+      timeoutRef.current = setTimeout(() => {
         try {
           const cache = NativeFile.getFileSize(
             constants.ExternalCachesDirectoryPath,
@@ -30,7 +47,11 @@ export default function StorageUsageSection() {
             setFreeSpace(free);
           }
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.error(e);
+        } finally {
+          timeoutRef.current = null;
+          interactionTaskRef.current = null;
         }
       }, 100);
     });
@@ -38,6 +59,9 @@ export default function StorageUsageSection() {
 
   useEffect(() => {
     fetchStorageInfo();
+    return () => {
+      cancelPendingFetchStorageInfo();
+    };
   }, []);
 
   const formatBytes = (bytes: number, decimals = 2) => {
@@ -58,6 +82,7 @@ export default function StorageUsageSection() {
       fetchStorageInfo();
       showToast(getString('advancedSettingsScreen.cacheCleared'));
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error(e);
     }
   };
