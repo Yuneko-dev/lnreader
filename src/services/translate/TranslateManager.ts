@@ -41,7 +41,6 @@ export class TranslateManager {
     signal?: AbortSignal,
   ): Promise<string> {
     const $ = cheerio.load(html, null, false);
-
     // Select elements that typically contain text we want to translate.
     // Avoid translating attributes directly, just text nodes inside elements.
     const translatableElements = $(
@@ -102,9 +101,11 @@ export class TranslateManager {
       }
     });
 
+    console.log("textsToTranslate", textsToTranslate.length);
+
     if (textsToTranslate.length === 0) {
       if (onProgress) onProgress(100);
-      return html;
+      return "<h2>Error: Unable to translate text due to invalid HTML format. The plugin returned content without standard wrapping tags.</h2>";
     }
 
     const engine = this.getEngine(config);
