@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useMMKVString } from 'react-native-mmkv';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useMMKVString, useMMKVObject } from 'react-native-mmkv';
 import { SearchResult, TrackerName, UserListEntry } from '@services/Trackers';
 import { TrackerMetadata, getTracker } from './useTracker';
 import { getErrorMessage } from '@utils/error';
-import { getMMKVObject, setMMKVObject, MMKVStorage } from '@utils/mmkv/mmkv';
+import { getMMKVObject, MMKVStorage } from '@utils/mmkv/mmkv';
 import { showToast } from '@utils/showToast';
 
 export const TRACKED_NOVEL_PREFIX = 'TRACKED_NOVEL_PREFIX';
@@ -15,6 +15,7 @@ const getTrackerStorageKey = (
   novelId: number | 'NO_ID',
   trackerName: TrackerName,
 ) => {
+  if (novelId === 'NO_ID') return `DUMMY_KEY_NO_ID_${trackerName}`;
   return `${TRACKED_NOVEL_PREFIX}_${novelId}_${trackerName}`;
 };
 
@@ -23,17 +24,35 @@ const getOldStorageKey = (novelId: number | 'NO_ID') => {
 };
 
 export const useTrackedNovel = (novelId: number | 'NO_ID') => {
+  const idStr = novelId === 'NO_ID' ? 'NO_ID' : String(novelId);
   const [migrated, setMigrated] = useMMKVString(
-    `${TRACKED_NOVEL_MIGRATION}_${novelId}`,
+    `${TRACKED_NOVEL_MIGRATION}_${idStr}`,
   );
 
-  const [trackedNovels, setTrackedNovels] = useState<
-    Partial<Record<TrackerName, TrackedNovel>>
-  >({});
+  const [aniList, setAniList] = useMMKVObject<TrackedNovel>(
+    getTrackerStorageKey(novelId, 'AniList'),
+  );
+  const [myAnimeList, setMyAnimeList] = useMMKVObject<TrackedNovel>(
+    getTrackerStorageKey(novelId, 'MyAnimeList'),
+  );
+  const [kitsu, setKitsu] = useMMKVObject<TrackedNovel>(
+    getTrackerStorageKey(novelId, 'Kitsu'),
+  );
+  const [mangaUpdates, setMangaUpdates] = useMMKVObject<TrackedNovel>(
+    getTrackerStorageKey(novelId, 'MangaUpdates'),
+  );
+
+  const trackedNovels = useMemo(() => {
+    const loaded: Partial<Record<TrackerName, TrackedNovel>> = {};
+    if (aniList) loaded.AniList = aniList;
+    if (myAnimeList) loaded.MyAnimeList = myAnimeList;
+    if (mangaUpdates) loaded.MangaUpdates = mangaUpdates;
+    if (kitsu) loaded.Kitsu = kitsu;
+    return loaded;
+  }, [aniList, myAnimeList, mangaUpdates, kitsu]);
 
   /**
-   * Loads all tracked novel data for this novelId across all trackers.
-   * Performs one-time migration from old single-tracker format if needed.
+   * One-time migration from old single-tracker format if needed.
    */
   useEffect(() => {
     if (novelId === 'NO_ID') {
@@ -50,24 +69,6 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
 
       setMigrated('true');
     }
-
-    const loadedNovels: Partial<Record<TrackerName, TrackedNovel>> = {};
-    const trackerNames: TrackerName[] = [
-      'AniList',
-      'MyAnimeList',
-      'MangaUpdates',
-      'Kitsu',
-    ];
-
-    trackerNames.forEach(trackerName => {
-      const key = getTrackerStorageKey(novelId, trackerName);
-      const data = getMMKVObject<TrackedNovel>(key);
-      if (data) {
-        loadedNovels[trackerName] = data;
-      }
-    });
-
-    setTrackedNovels(loadedNovels);
   }, [novelId, migrated, setMigrated]);
 
   const getTrackedNovel = useCallback(
@@ -88,6 +89,26 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
     return Object.keys(trackedNovels) as TrackerName[];
   }, [trackedNovels]);
 
+  const saveTrackerUpdate = useCallback(
+    (trackerName: TrackerName, data: TrackedNovel | undefined) => {
+      switch (trackerName) {
+        case 'AniList':
+          setAniList(data);
+          break;
+        case 'MyAnimeList':
+          setMyAnimeList(data);
+          break;
+        case 'MangaUpdates':
+          setMangaUpdates(data);
+          break;
+        case 'Kitsu':
+          setKitsu(data);
+          break;
+      }
+    },
+    [setAniList, setMyAnimeList, setMangaUpdates, setKitsu],
+  );
+
   const trackNovel = useCallback(
     (tracker: TrackerMetadata, novel: SearchResult) => {
       if (novelId === 'NO_ID') {
@@ -97,23 +118,16 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
       return getTracker(tracker.name)
         .getUserListEntry(novel.id, tracker.auth)
         .then((data: UserListEntry) => {
-          const trackedNovel = {
+          const trackedNovelData = {
             ...novel,
             ...data,
           };
 
-          const key = getTrackerStorageKey(novelId, tracker.name);
-          setMMKVObject(key, trackedNovel);
-
-          setTrackedNovels(prev => ({
-            ...prev,
-            [tracker.name]: trackedNovel,
-          }));
-
-          return trackedNovel;
+          saveTrackerUpdate(tracker.name, trackedNovelData);
+          return trackedNovelData;
         });
     },
-    [novelId],
+    [novelId, saveTrackerUpdate],
   );
 
   const untrackNovel = useCallback(
@@ -122,16 +136,9 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
         return;
       }
 
-      const key = getTrackerStorageKey(novelId, trackerName);
-      MMKVStorage.delete(key);
-
-      setTrackedNovels(prev => {
-        const newTracked = { ...prev };
-        delete newTracked[trackerName];
-        return newTracked;
-      });
+      saveTrackerUpdate(trackerName, undefined);
     },
-    [novelId],
+    [novelId, saveTrackerUpdate],
   );
 
   const updateTrackedNovel = useCallback(
@@ -145,8 +152,15 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
         return Promise.resolve();
       }
 
+      const mergedPayload = {
+        status: currentTrackedNovel.status,
+        progress: currentTrackedNovel.progress,
+        score: currentTrackedNovel.score,
+        ...data,
+      };
+
       return getTracker(tracker.name)
-        .updateUserListEntry(currentTrackedNovel.id, data, tracker.auth)
+        .updateUserListEntry(currentTrackedNovel.id, mergedPayload, tracker.auth)
         .then((res: UserListEntry) => {
           const updatedNovel = {
             ...currentTrackedNovel,
@@ -155,18 +169,11 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
             status: res.status,
           };
 
-          const key = getTrackerStorageKey(novelId, tracker.name);
-          setMMKVObject(key, updatedNovel);
-
-          setTrackedNovels(prev => ({
-            ...prev,
-            [tracker.name]: updatedNovel,
-          }));
-
+          saveTrackerUpdate(tracker.name, updatedNovel);
           return updatedNovel;
         });
     },
-    [novelId, trackedNovels],
+    [novelId, trackedNovels, saveTrackerUpdate],
   );
 
   /**
@@ -199,10 +206,17 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
             return;
           }
 
+          const mergedPayload = {
+            status: currentTrackedNovel.status,
+            progress: currentTrackedNovel.progress,
+            score: currentTrackedNovel.score,
+            ...data,
+          };
+
           try {
             const res = await getTracker(trackerName).updateUserListEntry(
               currentTrackedNovel.id,
-              data,
+              mergedPayload,
               tracker.auth,
             );
 
@@ -213,13 +227,7 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
               status: res.status,
             };
 
-            const key = getTrackerStorageKey(novelId, trackerName);
-            setMMKVObject(key, updatedNovel);
-
-            setTrackedNovels(prev => ({
-              ...prev,
-              [trackerName]: updatedNovel,
-            }));
+            saveTrackerUpdate(trackerName, updatedNovel);
           } catch (error) {
             showToast(
               `Failed to update ${trackerName}: ${getErrorMessage(error)}`,
@@ -229,7 +237,7 @@ export const useTrackedNovel = (novelId: number | 'NO_ID') => {
 
       await Promise.all(updatePromises);
     },
-    [novelId, trackedNovels],
+    [novelId, trackedNovels, saveTrackerUpdate],
   );
 
   const trackedNovel = useMemo(() => {

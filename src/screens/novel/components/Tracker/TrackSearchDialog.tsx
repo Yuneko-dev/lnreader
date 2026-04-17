@@ -45,9 +45,12 @@ const TrackSearchDialog: React.FC<TrackSearchDialogProps> = ({
 
   useEffect(() => {
     if (visible) {
-      getSearchResults();
+      const timeout = setTimeout(() => {
+        getSearchResults();
+      }, 500);
+      return () => clearTimeout(timeout);
     }
-  }, [getSearchResults, visible]);
+  }, [getSearchResults, visible, searchText]);
 
   const handleSelectNovel = useCallback((item: SearchResult) => {
     setSelectedNovel(item);

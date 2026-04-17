@@ -44,6 +44,34 @@ const updateListEntryMutation = `mutation($id: Int!, $status: MediaListStatus, $
   }
 }`;
 
+export interface CoverImage {
+  extraLarge: string;
+}
+export interface Title {
+  userPreferred: string;
+}
+export interface Media {
+  id: number;
+  chapters: number | null;
+  title: Title;
+  coverImage: CoverImage;
+}
+export interface Page {
+  media: Media[];
+}
+export interface AniListResponseSearchNovel {
+  data: {
+    Page: Page;
+  };
+}
+export interface AniListResponseError {
+  data: null,
+  errors: {
+    message: string,
+    status: number,
+  }[];
+}
+
 export const aniListTracker = {
   authenticate: async () => {
     const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
@@ -85,9 +113,9 @@ export const aniListTracker = {
   // AniList does not support refresh tokens, so we can't re-authenticate the user.
   revalidate: undefined,
   handleSearch: async (search, auth) => {
-    const { data } = await queryAniList(searchQuery, { search }, auth);
-
-    return data.Page.media.map((m: any) => {
+    const resp = (await queryAniList(searchQuery, { search }, auth)) as AniListResponseSearchNovel | AniListResponseError;
+    const { data } = resp;
+    return data?.Page.media.map((m: any) => {
       return {
         id: m.id,
         title: m.title.userPreferred,
