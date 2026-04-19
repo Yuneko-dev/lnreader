@@ -147,9 +147,9 @@ const SettingsSecurityScreen = ({ navigation }: any) => {
               ]}
               android_ripple={{ color: theme.rippleColor }}
               onPress={() => {
-                hideLockBgModal();
                 withAuth(() => {
                   setSecuritySettings({ lockOnBackground: option.value });
+                  hideLockBgModal();
                 });
               }}
             >
