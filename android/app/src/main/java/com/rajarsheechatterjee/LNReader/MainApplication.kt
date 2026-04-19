@@ -25,6 +25,8 @@ import okhttp3.OkHttpClient
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.dnsoverhttps.DnsOverHttps
 import java.net.InetAddress
+import android.os.Handler
+import android.os.Looper
 
 class MainApplication : Application(), ReactApplication {
     override val reactNativeHost: ReactNativeHost =
@@ -52,6 +54,14 @@ class MainApplication : Application(), ReactApplication {
     override fun onCreate() {
         super.onCreate()
 
+        setupCrashHandler()
+        setupNetworkClient()
+
+        loadReactNative(this)
+        ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    }
+
+    private fun setupCrashHandler() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             try {
@@ -72,8 +82,12 @@ class MainApplication : Application(), ReactApplication {
             }
             defaultHandler?.uncaughtException(thread, throwable)
         }
+    }
 
+    private fun setupNetworkClient() {
         OkHttpClientProvider.setOkHttpClientFactory(object : OkHttpClientFactory {
+            var client: OkHttpClient? = null
+
             override fun createNewNetworkModuleClient(): OkHttpClient {
                 val bootstrapClient = OkHttpClient.Builder().build()
                 val dns = DnsOverHttps.Builder().client(bootstrapClient)
@@ -86,13 +100,24 @@ class MainApplication : Application(), ReactApplication {
                     )
                     .build()
                 val builder = OkHttpClientProvider.createClientBuilder()
+                
+                builder.addInterceptor { chain ->
+                    val response = chain.proceed(chain.request())
+                    if ((response.code == 403 || response.code == 503) && 
+                        response.header("Server", "")?.contains("cloudflare", ignoreCase = true) == true) {
+                        Thread {
+                            Thread.sleep(2000)
+                            client?.connectionPool?.evictAll()
+                        }.start()
+                    }
+                    response
+                }
+                
                 builder.dns(dns)
-                return builder.build()
+                client = builder.build()
+                return client!!
             }
         })
-
-        loadReactNative(this)
-        ApplicationLifecycleDispatcher.onApplicationCreate(this)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
