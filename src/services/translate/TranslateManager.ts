@@ -140,6 +140,8 @@ export class TranslateManager {
       }
     }
 
+    console.log("Stop translate service");
+
     // Clean up any remaining data attributes just in case
     $('[data-translatable-block]').removeAttr('data-translatable-block');
 
