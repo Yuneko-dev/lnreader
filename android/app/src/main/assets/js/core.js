@@ -512,6 +512,7 @@ window.pageReader = new (function () {
     }
     destPage = parseInt(destPage, 10);
     if (destPage < 0) {
+      if (!reader.prevChapter) return;
       document.getElementsByClassName('transition-chapter')[0].innerText =
         reader.prevChapter.name;
       this.showChapterEnding(true, false, true);
@@ -521,6 +522,7 @@ window.pageReader = new (function () {
       return;
     }
     if (destPage >= this.totalPages.val) {
+      if (!reader.nextChapter) return;
       document.getElementsByClassName('transition-chapter')[0].innerText =
         reader.nextChapter.name;
       this.showChapterEnding(true);

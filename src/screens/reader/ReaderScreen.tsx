@@ -93,8 +93,7 @@ export const ChapterContent = ({
                 window.scrollTo({top:0,behavior:'smooth'})
               })()`
           : `(()=>{
-              document.querySelector('chapter').setAttribute('data-page',0);
-              document.querySelector("chapter").style.transform = 'translate(0%)';
+              pageReader.movePage(0);
             })()`,
       );
     });
