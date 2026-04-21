@@ -400,8 +400,23 @@ window.tts = new (function () {
   };
 
   // UPDATED: Scroll to top or center based on settings with padding for notch/camera
+  // In page reader mode, navigate to the correct page instead of scrolling
   this.scrollToElement = element => {
     if (!element) return;
+
+    // Page reader mode: navigate to the page containing this element
+    if (reader.generalSettings.val.pageReader) {
+      const rect = element.getBoundingClientRect();
+      const chapterRect = reader.chapterElement.getBoundingClientRect();
+      // Calculate offset from the chapter element's left edge
+      const offsetX = rect.left - chapterRect.left;
+      const pageWidth = window.innerWidth;
+      const targetPage = Math.floor(offsetX / pageWidth);
+      if (targetPage !== pageReader.page.val && targetPage >= 0 && targetPage < pageReader.totalPages.val) {
+        pageReader.movePage(targetPage);
+      }
+      return;
+    }
     // Check if element is partially visible (at least some part is in viewport)
     const rect = element.getBoundingClientRect();
     const windowHeight =
@@ -474,6 +489,8 @@ window.pageReader = new (function () {
     initialPageReaderConfig.nextChapterScreenVisible,
   );
   this.chapterEnding = document.getElementsByClassName('transition-chapter')[0];
+  this.navigating = false; // Lock to prevent rapid tap chapter jumps
+  this.initialized = false; // Flag to track if initial page position has been set
 
   this.showChapterEnding = (bool, instant, left) => {
     if (!this.chapterEnding) {
@@ -497,6 +514,9 @@ window.pageReader = new (function () {
   };
 
   this.movePage = destPage => {
+    // Prevent rapid taps from causing chapter jumps
+    if (this.navigating) return;
+
     if (this.chapterEndingVisible.val) {
       if (destPage < 0) {
         this.showChapterEnding(false);
@@ -507,28 +527,32 @@ window.pageReader = new (function () {
         return;
       }
       if (destPage >= this.totalPages.val) {
-        return reader.post({ type: 'next' });
+        this.navigating = true;
+        reader.post({ type: 'next' });
+        return;
       }
     }
     destPage = parseInt(destPage, 10);
     if (destPage < 0) {
       if (!reader.prevChapter) return;
+      this.navigating = true;
       document.getElementsByClassName('transition-chapter')[0].innerText =
         reader.prevChapter.name;
       this.showChapterEnding(true, false, true);
       setTimeout(() => {
         reader.post({ type: 'prev' });
-      }, 200);
+      }, 250);
       return;
     }
     if (destPage >= this.totalPages.val) {
       if (!reader.nextChapter) return;
+      this.navigating = true;
       document.getElementsByClassName('transition-chapter')[0].innerText =
         reader.nextChapter.name;
       this.showChapterEnding(true);
       setTimeout(() => {
         reader.post({ type: 'next' });
-      }, 200);
+      }, 250);
       return;
     }
     this.page.val = destPage;
@@ -608,7 +632,10 @@ function calculatePages() {
       10,
     );
 
-    if (initialPageReaderConfig.nextChapterScreenVisible) return;
+    if (initialPageReaderConfig.nextChapterScreenVisible) {
+      pageReader.initialized = true;
+      return;
+    }
 
     pageReader.movePage(
       Math.max(
@@ -618,6 +645,7 @@ function calculatePages() {
         ) - 1,
       ),
     );
+    pageReader.initialized = true;
   } else {
     const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
     const maxScrollY = scrollHeight - window.innerHeight;
@@ -631,7 +659,28 @@ function calculatePages() {
 }
 
 const ro = new ResizeObserver(() => {
-  if (pageReader.totalPages.val) {
+  if (reader.generalSettings.val.pageReader) {
+    // Recalculate total pages but preserve current page position
+    reader.refresh();
+    const newTotalPages = parseInt(
+      (reader.chapterWidth + reader.readerSettings.val.padding * 2) /
+      reader.layoutWidth,
+      10,
+    );
+    pageReader.totalPages.val = newTotalPages;
+    if (pageReader.initialized) {
+      // After initial load, just clamp current page and re-apply transform
+      if (pageReader.page.val >= newTotalPages) {
+        pageReader.movePage(newTotalPages - 1);
+      } else {
+        // Re-apply current page transform
+        reader.chapterElement.style.transform =
+          'translateX(-' + pageReader.page.val * 100 + '%)';
+      }
+    } else {
+      calculatePages();
+    }
+  } else if (pageReader.totalPages.val) {
     calculatePages();
   }
 });

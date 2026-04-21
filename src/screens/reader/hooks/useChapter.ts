@@ -89,6 +89,7 @@ export default function useChapter(
     autoScrollOffset,
     useVolumeButtons,
     volumeButtonsOffset,
+    pageReader: isPageReaderMode,
   } = useChapterGeneralSettings();
   const { incognitoMode } = useLibrarySettings();
   const [error, setError] = useState<string>();
@@ -97,21 +98,37 @@ export default function useChapter(
   const { setImmersiveMode, showStatusAndNavBar } = useFullscreenMode();
 
   const connectVolumeButton = useCallback(() => {
-    const offset = defaultTo(
-      volumeButtonsOffset,
-      Math.round(Dimensions.get('window').height * 0.75),
-    );
     emmiter.addListener('VolumeUp', () => {
-      webViewRef.current?.injectJavaScript(`(()=>{
-        window.scrollBy({top: -${offset}, behavior: 'smooth'})
-      })()`);
+      if (isPageReaderMode) {
+        webViewRef.current?.injectJavaScript(`(()=>{
+          pageReader.movePage(pageReader.page.val - 1);
+        })()`);
+      } else {
+        const offset = defaultTo(
+          volumeButtonsOffset,
+          Math.round(Dimensions.get('window').height * 0.75),
+        );
+        webViewRef.current?.injectJavaScript(`(()=>{
+          window.scrollBy({top: -${offset}, behavior: 'smooth'})
+        })()`);
+      }
     });
     emmiter.addListener('VolumeDown', () => {
-      webViewRef.current?.injectJavaScript(`(()=>{
-        window.scrollBy({top: ${offset}, behavior: 'smooth'})
-      })()`);
+      if (isPageReaderMode) {
+        webViewRef.current?.injectJavaScript(`(()=>{
+          pageReader.movePage(pageReader.page.val + 1);
+        })()`);
+      } else {
+        const offset = defaultTo(
+          volumeButtonsOffset,
+          Math.round(Dimensions.get('window').height * 0.75),
+        );
+        webViewRef.current?.injectJavaScript(`(()=>{
+          window.scrollBy({top: ${offset}, behavior: 'smooth'})
+        })()`);
+      }
     });
-  }, [webViewRef, volumeButtonsOffset]);
+  }, [webViewRef, volumeButtonsOffset, isPageReaderMode]);
 
   useEffect(() => {
     if (useVolumeButtons) {
@@ -432,12 +449,18 @@ export default function useChapter(
 
         if (delay <= 0) {
           if (AppState.currentState === 'active') {
-            webViewRef.current?.injectJavaScript(`(()=>{
-              window.scrollBy({top:${defaultTo(
-                autoScrollOffset,
-                Dimensions.get('window').height,
-              )},behavior:'smooth'})
-            })()`);
+            if (isPageReaderMode) {
+              webViewRef.current?.injectJavaScript(`(()=>{
+                pageReader.movePage(pageReader.page.val + 1);
+              })()`);
+            } else {
+              webViewRef.current?.injectJavaScript(`(()=>{
+                window.scrollBy({top:${defaultTo(
+                  autoScrollOffset,
+                  Dimensions.get('window').height,
+                )},behavior:'smooth'})
+              })()`);
+            }
           }
           lastInteractionTime.current = Date.now();
           autoScrollTimeout.current = setTimeout(loop, autoScrollInterval * 1000);
@@ -455,7 +478,7 @@ export default function useChapter(
       active = false;
       if (autoScrollTimeout.current) clearTimeout(autoScrollTimeout.current);
     };
-  }, [autoScroll, autoScrollInterval, autoScrollOffset, webViewRef, hidden]);
+  }, [autoScroll, autoScrollInterval, autoScrollOffset, webViewRef, hidden, isPageReaderMode]);
 
   const updateTracker = useCallback(() => {
     const chapterNumber = parseChapterNumber(novel.name, chapter.name);
