@@ -11,8 +11,8 @@ import { useTheme, useTranslateSettings } from '@hooks/persisted';
 import type {
   LLMProviderSupported,
   TranslateSettings,
+  initialTranslateSettings,
 } from '@hooks/persisted/useSettings';
-import { initialTranslateSettings } from '@hooks/persisted/useSettings';
 import { List, Button } from '@components/index';
 import { Portal, Modal, TextInput, Menu, Switch } from 'react-native-paper';
 import { supportedLanguagesList } from '@services/translate/TranslateEngine';
