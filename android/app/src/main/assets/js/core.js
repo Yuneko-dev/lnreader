@@ -559,6 +559,16 @@ window.pageReader = new (function () {
     reader.chapterElement.style.transform =
       'translateX(-' + destPage * 100 + '%)';
 
+    // E-ink refresh: flash opacity to force full screen redraw and reduce ghosting
+    if (reader.generalSettings.val.einkRefreshOnPageTurn) {
+      document.body.style.opacity = '0';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.body.style.opacity = '1';
+        });
+      });
+    }
+
     const newProgress = parseInt(
       ((pageReader.page.val + 1) / pageReader.totalPages.val) * 100,
       10,

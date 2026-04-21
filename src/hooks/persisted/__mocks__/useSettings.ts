@@ -56,6 +56,7 @@ export const initialChapterGeneralSettings = {
   bionicReading: false,
   tapToScroll: false,
   TTSEnable: true,
+  einkRefreshOnPageTurn: false,
 };
 
 export const initialChapterReaderSettings = {

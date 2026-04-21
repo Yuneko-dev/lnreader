@@ -545,7 +545,10 @@
     "textColor": "Màu chữ",
     "textColorModal": "Chọn màu chữ",
     "title": "Trình đọc",
-    "verticalSeekbarDesc": "Sử dụng thanh cuộn dọc"
+    "verticalSeekbarDesc": "Sử dụng thanh cuộn dọc",
+    "volumeButtonsOffset": "Khoảng cuộn nút âm lượng (px)",
+    "einkRefreshOnPageTurn": "Làm mới màn hình khi chuyển trang",
+    "einkRefreshOnPageTurnDesc": "Giảm tình trạng bóng ma trên màn hình e-ink"
   },
   "sourceScreen": {
     "noResultsFound": "Không tìm thấy kết quả"

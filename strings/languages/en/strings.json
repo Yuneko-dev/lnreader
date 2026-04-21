@@ -545,7 +545,10 @@
     "textColor": "Text color",
     "textColorModal": "Text color",
     "title": "Reader",
-    "verticalSeekbarDesc": "Use vertical seekbar"
+    "verticalSeekbarDesc": "Use vertical seekbar",
+    "volumeButtonsOffset": "Volume scroll offset (px)",
+    "einkRefreshOnPageTurn": "Refresh screen on page turn",
+    "einkRefreshOnPageTurnDesc": "Reduce ghosting on e-ink displays"
   },
   "sourceScreen": {
     "noResultsFound": "No results found"

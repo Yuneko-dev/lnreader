@@ -20,6 +20,7 @@ const NavigationTab: React.FC = () => {
     autoScrollInterval = 10,
     autoScrollOffset = null,
     tapToScroll = false,
+    einkRefreshOnPageTurn = false,
     setChapterGeneralSettings,
   } = useChapterGeneralSettings();
 
@@ -47,7 +48,7 @@ const NavigationTab: React.FC = () => {
         {useVolumeButtons && (
           <View style={styles.inputContainer}>
             <TextInput
-              label={getString('readerSettings.volumeButtonsOffset' as any)}
+              label={getString('readerSettings.volumeButtonsOffset')}
               mode="outlined"
               keyboardType="numeric"
               defaultValue={defaultTo(
@@ -101,6 +102,19 @@ const NavigationTab: React.FC = () => {
           onPress={() => setChapterGeneralSettings({ pageReader: !pageReader })}
           theme={theme}
         />
+        {pageReader ? (
+          <SettingSwitch
+            label={getString('readerSettings.einkRefreshOnPageTurn')}
+            description={getString('readerSettings.einkRefreshOnPageTurnDesc')}
+            value={einkRefreshOnPageTurn}
+            onPress={() =>
+              setChapterGeneralSettings({
+                einkRefreshOnPageTurn: !einkRefreshOnPageTurn,
+              })
+            }
+            theme={theme}
+          />
+        ) : null}
       </View>
 
       <View style={styles.section}>

@@ -457,6 +457,9 @@ export interface StringMap {
   'readerSettings.textColorModal': 'string';
   'readerSettings.title': 'string';
   'readerSettings.verticalSeekbarDesc': 'string';
+  'readerSettings.volumeButtonsOffset': 'string';
+  'readerSettings.einkRefreshOnPageTurn': 'string';
+  'readerSettings.einkRefreshOnPageTurnDesc': 'string';
   'sourceScreen.noResultsFound': 'string';
   'statsScreen.downloadedChapters': 'string';
   'statsScreen.genreDistribution': 'string';
