@@ -81,6 +81,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
     nextChapter,
     prevChapter,
     webViewRef,
+    resetAutoScroll,
   } = useChapterContext();
   const theme = useTheme();
   const { bottom } = useSafeAreaInsets();
@@ -434,6 +435,9 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({ onPress }) => {
           return;
         }
         switch (event.type) {
+          case 'user-interaction':
+            resetAutoScroll();
+            break;
           case 'tts-queue': {
             const payload = event.data as
               | { queue?: unknown; startIndex?: unknown }

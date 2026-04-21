@@ -788,6 +788,17 @@ window.addEventListener('load', () => {
   });
 })();
 
+// Auto scroll feature
+(function () {
+  const interact = () => {
+    reader.post({ type: 'user-interaction' });
+  };
+  ['touchstart', 'touchend', 'mousedown', 'mouseup', 'wheel'].forEach(evt => {
+    window.addEventListener(evt, interact, { passive: true });
+  });
+})();
+
+// Debug
 (function () {
   function formatValueToString(value) {
     const type = typeof value;
