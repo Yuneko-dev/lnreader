@@ -27,11 +27,16 @@ const Scrollbar = () => {
   let lock = false;
   const percentage = van.state(0);
   const update = ratio => {
+    const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+    const maxScrollY = scrollHeight - window.innerHeight;
     if (ratio === undefined) {
-      ratio = (window.scrollY + reader.layoutHeight) / reader.chapterHeight;
+      ratio = maxScrollY > 0 ? window.scrollY / maxScrollY : 1;
     }
     if (ratio > 1) {
       ratio = 1;
+    }
+    if (ratio < 0) {
+      ratio = 0;
     }
     if (reader.generalSettings.val.pageReader) {
       pageReader.movePage(
@@ -41,8 +46,10 @@ const Scrollbar = () => {
     }
     percentage.val = parseInt(ratio * 100);
     if (lock) {
+      const targetTop = maxScrollY > 0 ? maxScrollY * ratio : 0;
+      // console.log('[PROGRESS_DEBUG] scrollbar updated: dragged to ratio=' + ratio + ', targetTop=' + targetTop + ', current scrollY=' + window.scrollY + ', maxScrollY=' + maxScrollY);
       window.scrollTo({
-        top: reader.chapterHeight * ratio - reader.layoutHeight,
+        top: targetTop,
         behavior: 'instant',
       });
     }
@@ -193,9 +200,14 @@ const Footer = () => {
     }),
   );
   window.addEventListener('scroll', () => {
-    let ratio = (window.scrollY + reader.layoutHeight) / reader.chapterHeight;
+    const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+    const maxScrollY = scrollHeight - window.innerHeight;
+    let ratio = maxScrollY > 0 ? window.scrollY / maxScrollY : 1;
     if (ratio > 1) {
       ratio = 1;
+    }
+    if (ratio < 0) {
+      ratio = 0;
     }
     percentage.val = parseInt(ratio * 100);
   });

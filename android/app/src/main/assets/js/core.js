@@ -40,6 +40,7 @@ window.reader = new (function () {
   this.chapterHeight = this.chapterElement.scrollHeight + this.paddingTop;
   this.layoutHeight = window.screen.height;
   this.layoutWidth = window.screen.width;
+  // console.log('[PROGRESS_DEBUG] core initialized: layoutHeight=' + this.layoutHeight + ', screenHeight=' + window.screen.height + ', innerHeight=' + window.innerHeight);
 
   this.layoutEvent = undefined;
   this.chapterEndingVisible = van.state(false);
@@ -50,6 +51,7 @@ window.reader = new (function () {
       this.chapterWidth = this.chapterElement.scrollWidth;
     } else {
       this.chapterHeight = this.chapterElement.scrollHeight + this.paddingTop;
+      // console.log('[PROGRESS_DEBUG] current state (refresh): chapterHeight=' + this.chapterHeight + ', scrollY=' + window.scrollY + ', layoutHeight=' + this.layoutHeight + ', innerHeight=' + window.innerHeight);
     }
   };
 
@@ -100,12 +102,17 @@ window.reader = new (function () {
 
   document.onscrollend = () => {
     if (!this.generalSettings.val.pageReader) {
+      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+      const maxScrollY = scrollHeight - window.innerHeight;
+      const progressToSave = parseInt(
+        maxScrollY > 0 ? (window.scrollY / maxScrollY) * 100 : 100,
+        10,
+      );
+      const finalProgress = progressToSave > 100 ? 100 : progressToSave;
+      // console.log('[PROGRESS_DEBUG] onscrollend: scrollY=' + window.scrollY + ', maxScrollY=' + maxScrollY + ', innerHeight=' + window.innerHeight + ', scrollHeight=' + scrollHeight + ', progress calculation=' + finalProgress + '%');
       this.post({
         type: 'save',
-        data: parseInt(
-          ((window.scrollY + this.layoutHeight) / this.chapterHeight) * 100,
-          10,
-        ),
+        data: finalProgress,
       });
     }
   };
@@ -551,9 +558,11 @@ window.pageReader = new (function () {
       return;
     }
     if (reader.generalSettings.val.pageReader) {
+      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+      const maxScrollY = scrollHeight - window.innerHeight;
       const ratio = Math.min(
         0.99,
-        (window.scrollY + reader.layoutHeight) / reader.chapterHeight,
+        maxScrollY > 0 ? window.scrollY / maxScrollY : 1,
       );
       document.body.classList.add('page-reader');
       setTimeout(() => {
@@ -570,10 +579,10 @@ window.pageReader = new (function () {
       document.body.classList.remove('page-reader');
       setTimeout(() => {
         reader.refresh();
+        const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+        const maxScrollY = scrollHeight - window.innerHeight;
         window.scrollTo({
-          top:
-            (reader.chapterHeight * (this.page.val + 1)) / this.totalPages.val -
-            reader.layoutHeight,
+          top: maxScrollY > 0 ? maxScrollY * ((this.page.val + 1) / this.totalPages.val) : 0,
           behavior: 'smooth',
         });
       }, 100);
@@ -608,10 +617,12 @@ function calculatePages() {
       ),
     );
   } else {
+    const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+    const maxScrollY = scrollHeight - window.innerHeight;
+    const targetTop = maxScrollY > 0 ? (maxScrollY * reader.chapter.progress) / 100 : 0;
+    // console.log('[PROGRESS_DEBUG] calculatePages (scroll to progress): requested progress=' + reader.chapter.progress + '%, calculated targetTop=' + targetTop + ', current maxScroll=' + maxScrollY);
     window.scrollTo({
-      top:
-        (reader.chapterHeight * reader.chapter.progress) / 100 -
-        reader.layoutHeight,
+      top: targetTop,
       behavior: 'smooth',
     });
   }
