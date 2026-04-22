@@ -108,7 +108,20 @@ const updateNovelChapters = async (
 
     const existingMap = new Map(existingChapters.map(c => [c.path, c]));
 
-    const toInsert = [];
+    // If no existing chapters, this is the first population — don't set dateFetch
+    const isFirstPopulation = existingChapters.length === 0;
+
+    const toInsert: Array<{
+      path: string;
+      name: string;
+      releaseTime: string | null;
+      novelId: number;
+      updatedTime: ReturnType<typeof sql>;
+      chapterNumber: number | null;
+      page: string;
+      position: number;
+      dateFetch: string | null;
+    }> = [];
     const toUpdate = [];
 
     const updatedTime = sql`datetime('now','localtime')`;
@@ -137,6 +150,7 @@ const updateNovelChapters = async (
           chapterNumber: chapterNumber || null,
           page: chapterPage,
           position: position,
+          dateFetch: null, // Will be assigned below with offset
         });
       } else {
         // Update existing chapter if metadata changed
@@ -155,6 +169,16 @@ const updateNovelChapters = async (
             position: position,
           });
         }
+      }
+    }
+
+    // Assign dateFetch with offset for correct ordering (like Mihon: nowMillis + itemCount--)
+    // Only for truly new chapters, skip on first population
+    if (!isFirstPopulation && toInsert.length > 0) {
+      const nowMs = Date.now();
+      let itemCount = toInsert.length;
+      for (const item of toInsert) {
+        item.dateFetch = new Date(nowMs + itemCount--).toISOString();
       }
     }
 

@@ -40,6 +40,7 @@ export interface ChapterInfo {
   progress: number | null;
   position?: number | null;
   readDuration?: number | null;
+  dateFetch?: string | null;
 }
 
 export interface DownloadedChapter extends ChapterInfo {

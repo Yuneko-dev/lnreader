@@ -312,7 +312,7 @@ export const markPreviousChaptersUnread = async (
 
 export const clearUpdates = async (): Promise<void> => {
   await dbManager.write(async tx => {
-    tx.update(chapterSchema).set({ updatedTime: null }).run();
+    tx.update(chapterSchema).set({ dateFetch: null }).run();
   });
 };
 
@@ -704,20 +704,26 @@ export const getUpdatedOverviewFromDb = async () =>
       novelName: novelSchema.name,
       novelCover: novelSchema.cover,
       novelPath: novelSchema.path,
-      updateDate: sql<string>`DATE(${chapterSchema.updatedTime})`.as(
+      updateDate: sql<string>`DATE(${chapterSchema.dateFetch})`.as(
         'update_date',
       ),
       updatesPerDay: count(),
     })
     .from(chapterSchema)
     .innerJoin(novelSchema, eq(chapterSchema.novelId, novelSchema.id))
-    .where(isNotNull(chapterSchema.updatedTime))
+    .where(
+      and(
+        isNotNull(chapterSchema.dateFetch),
+        sql`${chapterSchema.dateFetch} >= datetime('now', '-3 months', 'localtime')`,
+      ),
+    )
     .groupBy(novelSchema.id, sql`update_date`)
     .orderBy(desc(sql`update_date`), novelSchema.id)
     .all();
 
 export const getDetailedUpdatesFromDb = async (
   novelId: number,
+  updateDate?: string,
   onlyDownloadableChapters?: boolean,
 ): Promise<Update[]> => {
   return dbManager
@@ -736,10 +742,16 @@ export const getDetailedUpdatesFromDb = async (
         eq(novelSchema.id, novelId),
         onlyDownloadableChapters
           ? eq(chapterSchema.isDownloaded, true)
-          : isNotNull(chapterSchema.updatedTime),
+          : and(
+              isNotNull(chapterSchema.dateFetch),
+              sql`${chapterSchema.dateFetch} >= datetime('now', '-3 months', 'localtime')`,
+              updateDate
+                ? eq(sql`DATE(${chapterSchema.dateFetch})`, updateDate)
+                : undefined,
+            ),
       ),
     )
-    .orderBy(desc(chapterSchema.updatedTime))
+    .orderBy(desc(chapterSchema.dateFetch))
     .all();
 };
 

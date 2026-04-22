@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View, Image } from 'react-native';
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import {
   ChapterInfo,
@@ -54,17 +54,18 @@ const UpdateNovelCard: React.FC<UpdateCardProps> = ({
   const theme = useTheme();
 
   const updateList = useCallback(async () => {
-    getDetailedUpdates(chapterListInfo.novelId, onlyDownloadedChapters).then(
+    getDetailedUpdates(
+      chapterListInfo.novelId,
+      chapterListInfo.updateDate,
+      onlyDownloadedChapters,
+    ).then(
       res => {
         if (res.length) {
           setChapterList(res);
         }
       },
     );
-  }, [chapterListInfo.novelId, getDetailedUpdates, onlyDownloadedChapters]);
-  useEffect(() => {
-    updateList();
-  }, [updateList]);
+  }, [chapterListInfo.novelId, chapterListInfo.updateDate, getDetailedUpdates, onlyDownloadedChapters]);
 
   const handleDownloadChapter = useCallback(
     (chapter: ChapterInfo) => {
@@ -176,7 +177,7 @@ const UpdateNovelCard: React.FC<UpdateCardProps> = ({
                   novelName={chapterListInfo.novelName}
                   chapter={item}
                   theme={theme}
-                  showChapterTitles={false}
+                  showChapterTitles={true}
                   onDownloadChapter={handleDownloadChapter}
                   onDeleteChapter={handleDeleteChapter}
                   onSelectPress={navigateToChapter}
@@ -200,7 +201,7 @@ const UpdateNovelCard: React.FC<UpdateCardProps> = ({
         novelName={chapterListInfo.novelName}
         chapter={chapterList[0]}
         theme={theme}
-        showChapterTitles={false}
+        showChapterTitles={true}
         onDownloadChapter={handleDownloadChapter}
         onDeleteChapter={handleDeleteChapter}
         onSelectPress={navigateToChapter}
