@@ -58,14 +58,17 @@ const UpdateNovelCard: React.FC<UpdateCardProps> = ({
       chapterListInfo.novelId,
       chapterListInfo.updateDate,
       onlyDownloadedChapters,
-    ).then(
-      res => {
-        if (res.length) {
-          setChapterList(res);
-        }
-      },
-    );
-  }, [chapterListInfo.novelId, chapterListInfo.updateDate, getDetailedUpdates, onlyDownloadedChapters]);
+    ).then(res => {
+      if (res.length) {
+        setChapterList(res);
+      }
+    });
+  }, [
+    chapterListInfo.novelId,
+    chapterListInfo.updateDate,
+    getDetailedUpdates,
+    onlyDownloadedChapters,
+  ]);
 
   const handleDownloadChapter = useCallback(
     (chapter: ChapterInfo) => {

@@ -207,7 +207,10 @@ const updateNovelChapters = async (
         }
       }
       // Force UI refresh
-      MMKVStorage.set(NOVEL_UPDATE_RANDOM_KEY, Math.random().toString(36).substring(2, 15));
+      MMKVStorage.set(
+        NOVEL_UPDATE_RANDOM_KEY,
+        Math.random().toString(36).substring(2, 15),
+      );
     }
 
     if (toUpdate.length > 0) {
