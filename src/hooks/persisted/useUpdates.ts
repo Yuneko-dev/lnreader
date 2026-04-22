@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   getDetailedUpdatesFromDb,
   getUpdatedOverviewFromDb,
@@ -11,17 +11,21 @@ import { useFocusEffect } from '@react-navigation/native';
 
 export const SHOW_LAST_UPDATE_TIME = 'SHOW_LAST_UPDATE_TIME';
 export const LAST_UPDATE_TIME = 'LAST_UPDATE_TIME';
+export const NOVEL_UPDATE_RANDOM_KEY = 'NOVEL_UPDATE_RANDOM_KEY';
 
 export const useLastUpdate = () => {
   const [showLastUpdateTime = true, setShowLastUpdateTime] = useMMKVBoolean(
     SHOW_LAST_UPDATE_TIME,
   );
   const [lastUpdateTime, setLastUpdateTime] = useMMKVString(LAST_UPDATE_TIME);
+  const [novelUpdateRandomKey, setNovelUpdateRandomKey] = useMMKVString(NOVEL_UPDATE_RANDOM_KEY);
   return {
     lastUpdateTime,
     showLastUpdateTime,
     setLastUpdateTime,
     setShowLastUpdateTime,
+    novelUpdateRandomKey,
+    setNovelUpdateRandomKey,
   };
 };
 
@@ -29,8 +33,7 @@ export const useUpdates = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [updatesOverview, setUpdatesOverview] = useState<UpdateOverview[]>([]);
 
-  const { lastUpdateTime, showLastUpdateTime, setLastUpdateTime } =
-    useLastUpdate();
+  const { lastUpdateTime, showLastUpdateTime, novelUpdateRandomKey } = useLastUpdate();
   const [error, setError] = useState('');
 
   const getDetailedUpdates = useCallback(
@@ -61,29 +64,19 @@ export const useUpdates = () => {
     [],
   );
 
-  // Use ref for lastUpdateTime to avoid circular dependency in getUpdates
-  const lastUpdateTimeRef = useRef(lastUpdateTime);
-  useLayoutEffect(() => {
-    lastUpdateTimeRef.current = lastUpdateTime;
-  }, [lastUpdateTime]);
-
   const getUpdates = useCallback(async () => {
     setIsLoading(true);
     getUpdatedOverviewFromDb()
       .then(res => {
         setUpdatesOverview(res);
-        if (res.length) {
-          if (
-            !lastUpdateTimeRef.current ||
-            dayjs(lastUpdateTimeRef.current).isBefore(dayjs(res[0].updateDate))
-          ) {
-            setLastUpdateTime(res[0].updateDate);
-          }
-        }
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setIsLoading(false));
-  }, [setLastUpdateTime]);
+  }, []);
+
+  useEffect(() => {
+    getUpdates();
+  }, [novelUpdateRandomKey, getUpdates]);
 
   useFocusEffect(
     useCallback(() => {

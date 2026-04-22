@@ -8,6 +8,8 @@ import { dbManager } from '@database/db';
 import { novelSchema, chapterSchema } from '@database/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import NativeFile from '@specs/NativeFile';
+import { MMKVStorage } from '@utils/mmkv/mmkv';
+import { NOVEL_UPDATE_RANDOM_KEY } from '@hooks/persisted/useUpdates';
 
 /**
  * Update novel metadata in the database including cover image.
@@ -204,6 +206,8 @@ const updateNovelChapters = async (
           }
         }
       }
+      // Force UI refresh
+      MMKVStorage.set(NOVEL_UPDATE_RANDOM_KEY, Math.random().toString(36).substring(2, 15));
     }
 
     if (toUpdate.length > 0) {
