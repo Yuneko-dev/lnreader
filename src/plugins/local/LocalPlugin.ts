@@ -15,11 +15,6 @@ import { load } from 'cheerio';
 
 const storage = new Storage(LOCAL_PLUGIN_ID);
 
-// Init default value for plugin settings
-if (storage.get('disableEpubCss', true) === undefined) {
-  storage.set('disableEpubCss', true);
-}
-
 /**
  * A built-in plugin that handles locally imported novels (EPUBs).
  *
@@ -41,13 +36,13 @@ class LocalPlugin implements Plugin {
   pluginSettings: PluginSettings = {
     disableEpubCss: {
       label: `Disable the default CSS of EPUB. This means the application's CSS will take priority.`,
-      value: true,
+      value: false,
       type: 'Switch',
     },
   };
 
   get disableEpubCss(): boolean {
-    return storage.get('disableEpubCss');
+    return Boolean(storage.get('disableEpubCss', false));
   }
 
   async popularNovels(
