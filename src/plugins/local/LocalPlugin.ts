@@ -40,7 +40,7 @@ class LocalPlugin implements Plugin {
 
   pluginSettings: PluginSettings = {
     disableEpubCss: {
-      label: '',
+      label: `Disable the default CSS of EPUB. This means the application's CSS will take priority.`,
       value: true,
       type: 'Switch',
     },
