@@ -20,6 +20,7 @@ import com.rajarsheechatterjee.NativeVolumeButtonListener.NativeVolumeButtonList
 import com.rajarsheechatterjee.NativeTTSMediaControl.NativeTTSMediaControlPackage
 import com.rajarsheechatterjee.NativeZipArchive.NativeZipArchivePackage
 import com.rajarsheechatterjee.NativeEpub.NativeEpubPackage
+import com.rajarsheechatterjee.LocalServer.LocalServerPackage
 import expo.modules.ApplicationLifecycleDispatcher
 
 import com.facebook.react.modules.network.OkHttpClientProvider
@@ -47,6 +48,7 @@ class MainApplication : Application(), ReactApplication {
                     add(NativeZipArchivePackage())
                     add(FlagSecurePackage())
                     add(NativeEpubPackage())
+                    add(LocalServerPackage())
                 }
 
             override fun getJSMainModuleName(): String = "index"

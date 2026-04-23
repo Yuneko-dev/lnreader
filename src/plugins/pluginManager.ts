@@ -24,6 +24,7 @@ import { defaultCover } from './helpers/constants';
 import { downloadFile, fetchApi, fetchProto, fetchText } from './helpers/fetch';
 import { FilterTypes } from './types/filterTypes';
 import { isUrlAbsolute } from './helpers/isAbsoluteUrl';
+import { localPlugin } from './local/LocalPlugin';
 
 const packages: Record<string, any> = {
   'htmlparser2': { Parser },
@@ -164,7 +165,7 @@ const fetchPlugins = async (): Promise<PluginItem[]> => {
 
 const getPlugin = (pluginId: string) => {
   if (pluginId === LOCAL_PLUGIN_ID) {
-    return undefined;
+    return localPlugin;
   }
 
   if (!plugins[pluginId]) {

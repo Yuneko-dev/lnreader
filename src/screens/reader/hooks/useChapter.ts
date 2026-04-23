@@ -14,6 +14,7 @@ import {
   useTracker,
 } from '@hooks/persisted';
 import { fetchChapter, fetchPage } from '@services/plugin/fetch';
+import { LOCAL_PLUGIN_ID } from '@plugins/pluginManager';
 import { NOVEL_STORAGE } from '@utils/Storages';
 import {
   RefObject,
@@ -157,16 +158,28 @@ export default function useChapter(
 
   const loadChapterText = useCallback(
     async (id: number, path: string) => {
-      const filePath = `${NOVEL_STORAGE}/${novel.pluginId}/${chapter.novelId}/${id}/index.html`;
       let text = '';
-      if (NativeFile.exists(filePath)) {
-        text = NativeFile.readFile(filePath);
-      } else {
-        await fetchChapter(novel.pluginId, path)
+      if (novel.pluginId === LOCAL_PLUGIN_ID) {
+        // Local novels: always go through LocalPlugin.parseChapter()
+        // which reads the file and rewrites file:// URIs to http://localhost
+        const chapterDir = `${NOVEL_STORAGE}/local/${chapter.novelId}/${id}`;
+        await fetchChapter(novel.pluginId, chapterDir)
           .then(res => {
             text = res;
           })
           .catch(e => setError(e.message));
+      } else {
+        // Online novels: check downloaded file first, then fetch from source
+        const filePath = `${NOVEL_STORAGE}/${novel.pluginId}/${chapter.novelId}/${id}/index.html`;
+        if (NativeFile.exists(filePath)) {
+          text = NativeFile.readFile(filePath);
+        } else {
+          await fetchChapter(novel.pluginId, path)
+            .then(res => {
+              text = res;
+            })
+            .catch(e => setError(e.message));
+        }
       }
       return text;
     },

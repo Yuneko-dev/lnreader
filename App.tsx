@@ -23,6 +23,7 @@ import { useInitDatabase } from '@database/db';
 import AppLockOverlay, { useAppLock } from '@screens/more/AppLockScreen';
 import { useSecuritySettings, useLibrarySettings, useAppSettings } from '@hooks/persisted/useSettings';
 import NativeFile from '@specs/NativeFile';
+import { initLocalServer } from '@plugins/local/localServerManager';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => {
@@ -120,6 +121,10 @@ const App = () => {
   useEffect(() => {
     if (state.success || state.error) {
       LottieSplashScreen.hide();
+    }
+    if (state.success) {
+      // Start local HTTP server for serving novel files
+      initLocalServer();
     }
   }, [state.success, state.error]);
 
