@@ -44,7 +44,7 @@ const updateNovelMetadata = async (
   }
 
   await dbManager.write(async tx => {
-    tx.update(novelSchema)
+    await tx.update(novelSchema)
       .set({
         name,
         cover: cover || null,
@@ -79,7 +79,7 @@ const updateNovelNecessaryInfo = async (
     return;
   }
   await dbManager.write(async tx => {
-    tx.update(novelSchema).set(data).where(eq(novelSchema.id, novelId)).run();
+    await tx.update(novelSchema).set(data).where(eq(novelSchema.id, novelId)).run();
   });
 };
 
@@ -106,12 +106,22 @@ const updateNovelChapters = async (
         position: chapterSchema.position,
       })
       .from(chapterSchema)
-      .where(eq(chapterSchema.novelId, novelId));
+      .where(eq(chapterSchema.novelId, novelId))
+      .all();
 
     const existingMap = new Map(existingChapters.map(c => [c.path, c]));
 
     // If no existing chapters, this is the first population — don't set dateFetch
     const isFirstPopulation = existingChapters.length === 0;
+
+    const novelInfo = await tx
+      .select({ inLibrary: novelSchema.inLibrary })
+      .from(novelSchema)
+      .where(eq(novelSchema.id, novelId))
+      .get();
+
+    // If novel is not in library, don't set dateFetch
+    const inLibrary = novelInfo?.inLibrary ?? false;
 
     const toInsert: Array<{
       path: string;
@@ -175,8 +185,8 @@ const updateNovelChapters = async (
     }
 
     // Assign dateFetch with offset for correct ordering (like Mihon: nowMillis + itemCount--)
-    // Only for truly new chapters, skip on first population
-    if (!isFirstPopulation && toInsert.length > 0) {
+    // Only for truly new chapters, skip on first population and if not in library
+    if (!isFirstPopulation && inLibrary && toInsert.length > 0) {
       const nowMs = Date.now();
       let itemCount = toInsert.length;
       for (const item of toInsert) {
@@ -207,15 +217,16 @@ const updateNovelChapters = async (
         }
       }
       // Force UI refresh
-      MMKVStorage.set(
-        NOVEL_UPDATE_RANDOM_KEY,
-        Math.random().toString(36).substring(2, 15),
-      );
+      if (inLibrary)
+        MMKVStorage.set(
+          NOVEL_UPDATE_RANDOM_KEY,
+          Math.random().toString(36).substring(2, 15),
+        );
     }
 
     if (toUpdate.length > 0) {
       for (const chapterData of toUpdate) {
-        tx.update(chapterSchema)
+        await tx.update(chapterSchema)
           .set({
             name: chapterData.name,
             releaseTime: chapterData.releaseTime,
@@ -300,7 +311,7 @@ const updateNovel = async (
             downloadNewChapters,
             String(oldTotalPages),
           );
-        } catch {}
+        } catch { }
       }
 
       // Fetch any new pages that were added
@@ -314,7 +325,7 @@ const updateNovel = async (
             downloadNewChapters,
             String(page),
           );
-        } catch {}
+        } catch { }
       }
     }
   }
