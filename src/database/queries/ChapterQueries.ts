@@ -314,7 +314,7 @@ export const markPreviousChaptersUnread = async (
 
 export const clearUpdates = async (): Promise<void> => {
   await dbManager.write(async tx => {
-    tx.update(chapterSchema).set({ dateFetch: null }).run();
+    await tx.update(chapterSchema).set({ dateFetch: null }).run();
   });
 };
 
@@ -706,7 +706,7 @@ export const getUpdatedOverviewFromDb = async () =>
       novelName: novelSchema.name,
       novelCover: novelSchema.cover,
       novelPath: novelSchema.path,
-      updateDate: sql<string>`DATE(${chapterSchema.dateFetch})`.as(
+      updateDate: sql<string>`DATE(${chapterSchema.dateFetch}, 'localtime')`.as(
         'update_date',
       ),
       updatesPerDay: count(),
@@ -716,7 +716,7 @@ export const getUpdatedOverviewFromDb = async () =>
     .where(
       and(
         isNotNull(chapterSchema.dateFetch),
-        sql`${chapterSchema.dateFetch} >= datetime('now', '-3 months', 'localtime')`,
+        sql`${chapterSchema.dateFetch} >= datetime('now', '-3 months')`,
       ),
     )
     .groupBy(novelSchema.id, sql`update_date`)
@@ -746,9 +746,9 @@ export const getDetailedUpdatesFromDb = async (
           ? eq(chapterSchema.isDownloaded, true)
           : and(
               isNotNull(chapterSchema.dateFetch),
-              sql`${chapterSchema.dateFetch} >= datetime('now', '-3 months', 'localtime')`,
+              sql`${chapterSchema.dateFetch} >= datetime('now', '-3 months')`,
               updateDate
-                ? eq(sql`DATE(${chapterSchema.dateFetch})`, updateDate)
+                ? eq(sql`DATE(${chapterSchema.dateFetch}, 'localtime')`, updateDate)
                 : undefined,
             ),
       ),
