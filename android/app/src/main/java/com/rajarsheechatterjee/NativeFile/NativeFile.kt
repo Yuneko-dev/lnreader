@@ -150,8 +150,7 @@ class NativeFile(context: ReactApplicationContext) :
 
     override fun unlink(filepath: String) {
         val file = File(filepath)
-        if (!file.exists()) return
-        // throw Exception("File does not exist")
+        if (!file.exists()) throw Exception("File does not exist")
         deleteRecursive(file)
     }
 
