@@ -209,6 +209,24 @@ const updateNovelChapters = async (
       }
     }
 
+    console.log(
+      `[updateNovelChapters] novelId=${novelId} page=${page ?? 'ALL'}` +
+      ` existing=${existingChapters.length} insert=${toInsert.length}` +
+      ` update=${toUpdate.length} isFirstPop=${isFirstPopulation}` +
+      ` inLibrary=${inLibrary} skip=${!!skipUpdateFlag}` +
+      ` src=${chapters.length}`,
+    );
+    if (toInsert.length > 0 && existingChapters.length > 0) {
+      const srcPath = chapters[0].path;
+      const dbPath = existingChapters[0].path;
+      console.log(
+        `[updateNovelChapters] PATH MISMATCH?\n` +
+        `  DB:  "${dbPath}"\n` +
+        `  SRC: "${srcPath}"\n` +
+        `  MATCH: ${existingMap.has(srcPath)}`,
+      );
+    }
+
     // ═══ DELETE LOGIC ═══
     // Only delete if:
     // - Not first population (we have existing data to compare against)
