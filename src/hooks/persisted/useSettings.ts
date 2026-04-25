@@ -148,6 +148,7 @@ export interface TranslateSettings {
   llmEnableReasoning: boolean;
   llmReasoningEffort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
   autoTranslateNextChapter: boolean;
+  downloadTranslated: boolean;
 }
 
 const initialAppSettings: AppSettings = {
@@ -256,6 +257,7 @@ export const initialTranslateSettings: TranslateSettings = {
   llmEnableReasoning: false,
   llmReasoningEffort: 'low',
   autoTranslateNextChapter: false,
+  downloadTranslated: false,
 };
 
 export const useAppSettings = () => {

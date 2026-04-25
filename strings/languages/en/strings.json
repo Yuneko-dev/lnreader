@@ -538,7 +538,8 @@
         "modelName": "Model Name",
         "loadModels": "Load Models",
         "systemPrompt": "System Prompt",
-        "preTranslateNextChapter": "Pre-translate next chapter"
+        "preTranslateNextChapter": "Pre-translate next chapter",
+        "downloadTranslated": "Download translated version instead of raw"
       }
     },
     "drawer": {
@@ -550,7 +551,8 @@
     "finished": "Finished",
     "nextChapter": "Next: %{name}",
     "noNextChapter": "There's no next chapter",
-    "noPreviousChapter": "There's no previous chapter"
+    "noPreviousChapter": "There's no previous chapter",
+    "usingOfflineTranslation": "Using offline translated version"
   },
   "readerSettings": {
     "autoScrollInterval": "Scroll interval (seconds)",

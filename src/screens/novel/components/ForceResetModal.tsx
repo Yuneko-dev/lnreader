@@ -71,7 +71,7 @@ export default function ForceResetModal({
         addLog,
       );
       addLog(getString('novelScreen.forceResetModal.logSuccess'));
-      
+
       if (reloadMetadata) {
         await getNovel();
       }
@@ -160,7 +160,8 @@ export default function ForceResetModal({
               <View style={[styles.row]}>
                 <View style={{ flex: 1 }}>
                   <Text style={[{ color: theme.onSurface }]}>
-                    ╰─ {getString('novelScreen.forceResetModal.reloadAllPages', {
+                    ╰─{' '}
+                    {getString('novelScreen.forceResetModal.reloadAllPages', {
                       totalPages: novel.totalPages,
                     })}
                   </Text>
@@ -183,7 +184,8 @@ export default function ForceResetModal({
             {reloadChapters ? (
               <View style={[styles.row]}>
                 <Text style={[{ color: theme.onSurface, flex: 1 }]}>
-                  ╰─ {getString('novelScreen.forceResetModal.deleteDownloads')}
+                  ╰─{' '}
+                  {getString('novelScreen.forceResetModal.deleteDownloads')}
                 </Text>
                 <Switch
                   value={deleteDownloads}

@@ -534,7 +534,8 @@
         "systemPrompt": "Prompt hệ thống",
         "targetLanguage": "Ngôn ngữ đích",
         "translationSettings": "Cài đặt dịch",
-        "preTranslateNextChapter": "Dịch trước chương tiếp theo"
+        "preTranslateNextChapter": "Dịch trước chương tiếp theo",
+        "downloadTranslated": "Tải xuống bản dịch thay thế cho bản gốc"
       },
       "useChapterDrawerSwipeNavigation": "Vuốt để mở ngăn chương",
       "verticalSeekbar": "Thanh tua dọc",
@@ -550,7 +551,8 @@
     "finished": "Đã xong",
     "nextChapter": "Tiếp: %{name}",
     "noNextChapter": "Không có chương kế tiếp",
-    "noPreviousChapter": "Không có chương kế tiếp"
+    "noPreviousChapter": "Không có chương kế tiếp",
+    "usingOfflineTranslation": "Đang sử dụng bản dịch ngoại tuyến"
   },
   "readerSettings": {
     "autoScrollInterval": "Khoảng thời gian cuộn (giây)",

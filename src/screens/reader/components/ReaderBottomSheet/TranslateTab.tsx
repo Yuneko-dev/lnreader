@@ -137,6 +137,7 @@ const TranslateTab: React.FC = () => {
     llmEnableReasoning,
     llmReasoningEffort,
     autoTranslateNextChapter,
+    downloadTranslated,
     setTranslateSettings: _setTranslateSettings,
   } = useTranslateSettings();
 
@@ -276,6 +277,21 @@ const TranslateTab: React.FC = () => {
               value={autoTranslateNextChapter}
               onValueChange={val =>
                 setTranslateSettings({ autoTranslateNextChapter: val })
+              }
+              color={theme.primary}
+            />
+          </View>
+
+          <View style={[styles.settingItem]}>
+            <Text style={[styles.label, { color: theme.onSurface }]}>
+              {getString(
+                'readerScreen.bottomSheet.translateTab.downloadTranslated',
+              )}
+            </Text>
+            <Switch
+              value={downloadTranslated}
+              onValueChange={val =>
+                setTranslateSettings({ downloadTranslated: val })
               }
               color={theme.primary}
             />

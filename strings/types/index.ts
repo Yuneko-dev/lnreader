@@ -454,6 +454,7 @@ export interface StringMap {
   'readerScreen.bottomSheet.translateTab.loadModels': 'string';
   'readerScreen.bottomSheet.translateTab.systemPrompt': 'string';
   'readerScreen.bottomSheet.translateTab.preTranslateNextChapter': 'string';
+  'readerScreen.bottomSheet.translateTab.downloadTranslated': 'string';
   'readerScreen.drawer.scrollToBottom': 'string';
   'readerScreen.drawer.scrollToCurrentChapter': 'string';
   'readerScreen.drawer.scrollToTop': 'string';
@@ -462,6 +463,7 @@ export interface StringMap {
   'readerScreen.nextChapter': 'string';
   'readerScreen.noNextChapter': 'string';
   'readerScreen.noPreviousChapter': 'string';
+  'readerScreen.usingOfflineTranslation': 'string';
   'readerSettings.autoScrollInterval': 'string';
   'readerSettings.autoScrollOffset': 'string';
   'readerSettings.backgroundColor': 'string';

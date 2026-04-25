@@ -181,13 +181,19 @@ export const forceResetNovel = async (
     log(getString('novelScreen.forceResetModal.logRestoreState'));
     const updatedTime = sql`datetime('now','localtime')`;
     const toInsert: any[] = [];
-    
+
     // Track position per page
     const pagePositions = new Map<string, number>();
 
     for (let i = 0; i < allFetchedChapters.length; i++) {
       const chapter = allFetchedChapters[i];
-      const { name, path, releaseTime, page: customPage, chapterNumber } = chapter;
+      const {
+        name,
+        path,
+        releaseTime,
+        page: customPage,
+        chapterNumber,
+      } = chapter;
       const chapterPage = customPage || '1';
 
       const currentPosition = pagePositions.get(chapterPage) || 0;
@@ -240,7 +246,7 @@ export const forceResetNovel = async (
           .all();
         const newPathMap = new Map(newChapters.map(c => [c.path, c]));
         const newLastRead = newPathMap.get(lastReadObj.path);
-        
+
         if (newLastRead) {
           MMKVStorage.set(lastReadKey, JSON.stringify(newLastRead));
         } else {

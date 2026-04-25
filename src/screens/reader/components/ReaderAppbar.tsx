@@ -36,6 +36,7 @@ const ReaderAppbar = ({
     isTranslated,
     isTranslating,
     translateProgress,
+    isOfflineTranslated,
   } = useChapterContext();
   const { statusBarHeight } = useNovelContext();
 
@@ -85,6 +86,7 @@ const ReaderAppbar = ({
   };
 
   const getTranslateIconColor = () => {
+    if (isOfflineTranslated) return color(theme.onSurface).alpha(0.38).string();
     if (isTranslating) return theme.primary;
     if (isTranslated) return theme.primary;
     return theme.onSurface;
@@ -128,9 +130,12 @@ const ReaderAppbar = ({
           <IconButtonV2
             name={getTranslateIconName()}
             size={22}
-            onPress={() => translateChapter()}
+            onPress={() => {
+              if (!isOfflineTranslated) translateChapter();
+            }}
             color={getTranslateIconColor()}
             theme={theme}
+            disabled={isOfflineTranslated}
           />
           <View
             style={[
