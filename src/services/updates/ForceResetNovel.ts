@@ -4,10 +4,12 @@ import { chapterSchema, novelSchema } from '@database/schema';
 import { eq, sql } from 'drizzle-orm';
 import NativeFile from '@specs/NativeFile';
 import { NOVEL_STORAGE } from '@utils/Storages';
-import { ChapterItem } from '@plugins/types';
 import { getPlugin } from '@plugins/pluginManager';
 import { downloadFile } from '@plugins/helpers/fetch';
 import { getString } from '@strings/translations';
+import { LAST_READ_PREFIX } from '@hooks/persisted/useNovel';
+import { MMKVStorage } from '@utils/mmkv/mmkv';
+import { ChapterItem } from '@plugins/types';
 
 export interface ForceResetOptions {
   reloadMetadata: boolean;
@@ -179,17 +181,17 @@ export const forceResetNovel = async (
     log(getString('novelScreen.forceResetModal.logRestoreState'));
     const updatedTime = sql`datetime('now','localtime')`;
     const toInsert: any[] = [];
+    
+    // Track position per page
+    const pagePositions = new Map<string, number>();
 
-    for (let position = 0; position < allFetchedChapters.length; position++) {
-      const chapter = allFetchedChapters[position];
-      const {
-        name,
-        path,
-        releaseTime,
-        page: customPage,
-        chapterNumber,
-      } = chapter;
+    for (let i = 0; i < allFetchedChapters.length; i++) {
+      const chapter = allFetchedChapters[i];
+      const { name, path, releaseTime, page: customPage, chapterNumber } = chapter;
       const chapterPage = customPage || '1';
+
+      const currentPosition = pagePositions.get(chapterPage) || 0;
+      pagePositions.set(chapterPage, currentPosition + 1);
 
       const oldState = oldStateMap.get(path);
 
@@ -200,7 +202,7 @@ export const forceResetNovel = async (
         releaseTime: releaseTime || null,
         chapterNumber: chapterNumber || null,
         page: chapterPage,
-        position,
+        position: currentPosition,
         updatedTime,
         // Restore user state if it exists
         unread: oldState ? oldState.unread : true,
@@ -223,6 +225,30 @@ export const forceResetNovel = async (
           await tx.insert(chapterSchema).values(chunk).run();
         }
       });
+    }
+
+    // Fix lastRead in MMKV if it exists
+    const lastReadKey = `${LAST_READ_PREFIX}_${pluginId}_${novelPath}`;
+    const lastReadStr = MMKVStorage.getString(lastReadKey);
+    if (lastReadStr) {
+      try {
+        const lastReadObj = JSON.parse(lastReadStr);
+        const newChapters = await dbManager
+          .select()
+          .from(chapterSchema)
+          .where(eq(chapterSchema.novelId, novelId))
+          .all();
+        const newPathMap = new Map(newChapters.map(c => [c.path, c]));
+        const newLastRead = newPathMap.get(lastReadObj.path);
+        
+        if (newLastRead) {
+          MMKVStorage.set(lastReadKey, JSON.stringify(newLastRead));
+        } else {
+          MMKVStorage.delete(lastReadKey);
+        }
+      } catch {
+        MMKVStorage.delete(lastReadKey);
+      }
     }
   }
 };
