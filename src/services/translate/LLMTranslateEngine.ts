@@ -83,11 +83,23 @@ export class LLMTranslateEngine implements TranslateEngine {
     const MARKER = '---PARAGRAPH_BREAK---';
     const userPrompt = texts.join('\n' + MARKER + '\n');
 
-    const defaultSystemPrompt =
-      'You are a professional translator. Do NOT add any extra notes or conversational text. Maintain paragraph structural integrity by keeping the exact same ---PARAGRAPH_BREAK--- markers between translated paragraphs.';
-    const systemPrompt =
-      (this.config.systemPrompt || defaultSystemPrompt) +
-      `\nTranslate the following text from ${source} to ${target}`;
+    const systemPrompt = `You are an Expert Transcreator. Your task is to translate the source text accurately while dynamically adapting the style, tone, and localization based on any provided custom guidelines.
+
+Core Directives:
+1. Two-Step Process: Accurately capture the original meaning, then reshape the linguistic presentation according to the specific style requirements requested.
+2. Neutral Fallback: If no custom style guidelines are provided, produce a highly natural and fluent standard translation in the target language.
+
+Strict Technical Constraints (CRITICAL):
+- Formatting: You MUST maintain the exact structural integrity of the input. Keep all ---PARAGRAPH_BREAK--- markers exactly as they appear between paragraphs.
+- Clean Output: Output ONLY the final processed text. Do NOT include any explanations, formatting tags (unless present in the source), intro/outro conversational filler, or internal thinking.
+
+---
+[Custom Style Guidelines]:
+${this.config.systemPrompt || 'No specific guidelines.'}
+
+---
+Task: Translate the following text from ${source} to ${target}.
+`;
 
     let i: ReturnType<typeof setInterval> | undefined;
 

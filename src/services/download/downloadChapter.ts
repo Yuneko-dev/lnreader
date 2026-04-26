@@ -104,18 +104,18 @@ export const downloadChapter = async (
     if (translateSettings.downloadTranslated) {
       try {
         finalHtml = await TranslateManager.translateChapterHTML(
-        finalHtml,
-        translateSettings as any,
-      );
-      const loadedCheerio = cheerio.load(finalHtml, null, false);
-      const metaHTML = '<meta id="offline-translated-marker"/>';
-      // Ensure body exists or prepend to whatever root cheerio has
-      if (loadedCheerio('body').length > 0) {
-        loadedCheerio('body').prepend(metaHTML);
-      } else {
-        loadedCheerio.root().prepend(metaHTML);
-      }
-      finalHtml = loadedCheerio.html();
+          finalHtml,
+          translateSettings as any,
+        );
+        const loadedCheerio = cheerio.load(finalHtml, null, false);
+        const metaHTML = '<meta id="offline-translated-marker"/>';
+        // Ensure body exists or prepend to whatever root cheerio has
+        if (loadedCheerio('body').length > 0) {
+          loadedCheerio('body').prepend(metaHTML);
+        } else {
+          loadedCheerio.root().prepend(metaHTML);
+        }
+        finalHtml = loadedCheerio.html();
       } catch (e) {
         console.error(e);
         showToast('Error when translating chapter ' + chapter.name);

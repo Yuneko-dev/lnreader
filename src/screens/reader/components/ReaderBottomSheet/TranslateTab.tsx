@@ -11,10 +11,9 @@ import {
   BottomSheetTextInput,
 } from '@gorhom/bottom-sheet';
 import { useTheme, useTranslateSettings } from '@hooks/persisted';
-import {
-  type LLMProviderSupported,
-  type TranslateSettings,
-  initialTranslateSettings,
+import type {
+  LLMProviderSupported,
+  TranslateSettings,
 } from '@hooks/persisted/useSettings';
 import { List, Button } from '@components/index';
 import { Portal, Modal, TextInput, Menu, Switch } from 'react-native-paper';
@@ -142,15 +141,6 @@ const TranslateTab: React.FC = () => {
   } = useTranslateSettings();
 
   const { revertTranslation, isTranslated } = useChapterContext();
-
-  React.useEffect(() => {
-    if (!llmSystemPrompt || !llmSystemPrompt.trim()) {
-      _setTranslateSettings({
-        llmSystemPrompt: initialTranslateSettings.llmSystemPrompt,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Wrap setTranslateSettings: when any translation-affecting setting changes,
   // revert to original text so the user doesn't end up with double-translated text.

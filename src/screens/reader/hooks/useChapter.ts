@@ -244,7 +244,10 @@ export default function useChapter(
       try {
         const chap = navChapter ?? chapter;
         const cachedText = await chapterTextCache.get(chap.id);
-        const text = (cachedText && cachedText.length > 0) ? cachedText : loadChapterText(chap.id, chap.path);
+        const text =
+          cachedText && cachedText.length > 0
+            ? cachedText
+            : loadChapterText(chap.id, chap.path);
         const [nextChapResult, prevChapResult, awaitedText] = await Promise.all(
           [
             getNextChapter(chap.novelId, chap.position!, chap.page ?? ''),
@@ -326,7 +329,8 @@ export default function useChapter(
 
         // using cheerio
         const loadedCheerio = load(awaitedText);
-        const isOffline = loadedCheerio('meta[id="offline-translated-marker"]').length > 0;
+        const isOffline =
+          loadedCheerio('meta[id="offline-translated-marker"]').length > 0;
 
         if (isOffline) {
           showToast(getString('readerScreen.usingOfflineTranslation'));
