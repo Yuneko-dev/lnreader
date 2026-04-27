@@ -60,6 +60,12 @@ const FilterItem: React.FC<FilterItemProps> = memo(
       filterValue ??
       ({ type: filter.type, value: filter.value } as SelectedFilters[string]);
 
+    // Must be called unconditionally (rules of hooks)
+    const pickerContentStyle = useMemo(
+      () => ({ backgroundColor: theme.surfaceVariant }),
+      [theme.surfaceVariant],
+    );
+
     if (filter.type === FilterTypes.TextInput) {
       const value = getValueFor<(typeof filter)['type']>(filter, resolvedValue);
       return (
@@ -99,16 +105,12 @@ const FilterItem: React.FC<FilterItemProps> = memo(
       const label =
         filter.options.find(option => option.value === value)?.label ||
         'whatever';
-      const contentStyle = useMemo(
-        () => ({ backgroundColor: theme.surfaceVariant }),
-        [theme.surfaceVariant],
-      );
       return (
         <View style={styles.pickerContainer}>
           <Menu
             fullWidth
             visible={isVisible}
-            contentStyle={contentStyle}
+            contentStyle={pickerContentStyle}
             anchor={
               <Pressable
                 style={[styles.flex, { width: screenWidth - 48 }]}
