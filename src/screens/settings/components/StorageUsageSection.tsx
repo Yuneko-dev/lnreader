@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, InteractionManager } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAppSettings, useTheme } from '@hooks/persisted';
@@ -31,7 +31,7 @@ export default function StorageUsageSection() {
     }
   };
 
-  const fetchStorageInfo = () => {
+  const fetchStorageInfo = useCallback(() => {
     cancelPendingFetchStorageInfo();
     interactionTaskRef.current = InteractionManager.runAfterInteractions(() => {
       timeoutRef.current = setTimeout(() => {
@@ -57,14 +57,14 @@ export default function StorageUsageSection() {
         }
       }, 100);
     });
-  };
+  }, [constants.ExternalCachesDirectoryPath, constants.CachesDirectoryPath]);
 
   useEffect(() => {
     fetchStorageInfo();
     return () => {
       cancelPendingFetchStorageInfo();
     };
-  }, []);
+  }, [fetchStorageInfo]);
 
   const formatBytes = (bytes: number, decimals = 2) => {
     if (!+bytes) {

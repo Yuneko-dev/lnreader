@@ -151,10 +151,11 @@ export default function useChapter(
 
   // Cleanup: abort all translations when the hook unmounts (leaving reader)
   useEffect(() => {
+    const cache = translatedChapterCache.current;
     return () => {
       currentTranslateAbort.current?.abort();
       backgroundTranslateAbort.current?.abort();
-      translatedChapterCache.current.clear();
+      cache.clear();
     };
   }, []);
 
@@ -572,7 +573,7 @@ export default function useChapter(
     }
     setHidden(!hidden);
     resetAutoScroll();
-  }, [hidden, setImmersiveMode, showStatusAndNavBar, webViewRef]);
+  }, [hidden, setImmersiveMode, showStatusAndNavBar, webViewRef, resetAutoScroll]);
 
   const navigateChapter = useCallback(
     (position: 'NEXT' | 'PREV') => {
@@ -606,7 +607,7 @@ export default function useChapter(
         );
       }
     },
-    [getChapter, nextChapter, prevChapter],
+    [getChapter, nextChapter, prevChapter, resetAutoScroll],
   );
 
   useEffect(() => {
