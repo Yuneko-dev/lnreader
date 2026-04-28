@@ -47,20 +47,34 @@ export const fetchApi = async (
 ): Promise<Response> => {
   init = makeInit(init);
   const baseURL = new URL(url).origin;
-  if (init.headers instanceof Headers && init.headers.has('Cookie')) {
-    const cookieValue = init.headers.get('Cookie')!;
-    // console.info(`CookieManager#set: ${baseURL} => ${cookieValue}`);
-    await CookieManager.setFromResponse(baseURL, cookieValue);
-  } else {
-    const cookieKey = Object.keys(init.headers as Record<string, string>).find(
-      k => k.toLowerCase() === 'cookie',
+  let cookieString = '';
+  if (init.headers instanceof Headers) {
+    cookieString = init.headers.get('Cookie') || '';
+  } else if (init.headers) {
+    const cookieKey = Object.keys(init.headers).find(
+      k => k.toLowerCase() === 'cookie'
     );
-    if (cookieKey && (init.headers as Record<string, string>)[cookieKey]) {
-      const cookieValue = (init.headers as Record<string, string>)[cookieKey];
-      // console.info(`CookieManager#set: ${baseURL} => ${cookieValue}`);
-      await CookieManager.setFromResponse(baseURL, cookieValue);
+    if (cookieKey) {
+      cookieString = init.headers[cookieKey];
     }
   }
+  // console.log(cookieString);
+  if (cookieString) {
+    const cookiePairs = cookieString.split(';');
+    for (const pair of cookiePairs) {
+      const [name, ...valueParts] = pair.split('=');
+      if (name) {
+        const cookieName = name.trim();
+        const cookieValue = valueParts.join('=').trim();
+        await CookieManager.set(baseURL, {
+          name: cookieName,
+          value: cookieValue,
+          path: '/',
+        });
+      }
+    }
+  }
+  // if (!init.credentials) init.credentials = 'includes';
   // Test cookie
   // console.log(await CookieManager.get(baseURL));
   return await fetch(url, init);
