@@ -16,11 +16,10 @@ class NativeDownloadManagerPackage : BaseReactPackage() {
             NativeDownloadManagerSpec.NAME to ReactModuleInfo(
                 NativeDownloadManagerSpec.NAME,
                 NativeDownloadManagerSpec.NAME,
-                false, 
-                false, 
-                true, 
-                false, 
-                true
+                canOverrideExistingModule = false,
+                needsEagerInit = false,
+                isCxxModule = true,
+                isTurboModule = false
             )
         )
     }
