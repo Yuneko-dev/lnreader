@@ -573,7 +573,13 @@ export default function useChapter(
     }
     setHidden(!hidden);
     resetAutoScroll();
-  }, [hidden, setImmersiveMode, showStatusAndNavBar, webViewRef, resetAutoScroll]);
+  }, [
+    hidden,
+    setImmersiveMode,
+    showStatusAndNavBar,
+    webViewRef,
+    resetAutoScroll,
+  ]);
 
   const navigateChapter = useCallback(
     (position: 'NEXT' | 'PREV') => {

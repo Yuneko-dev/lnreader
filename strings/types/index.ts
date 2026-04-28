@@ -205,6 +205,7 @@ export interface StringMap {
   'common.logout': 'string';
   'common.name': 'string';
   'common.newUpdateAvailable': 'string';
+  'common.downloadingUpdate': 'string';
   'common.ok': 'string';
   'common.pause': 'string';
   'common.preparing': 'string';

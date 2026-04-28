@@ -232,6 +232,7 @@
     "logout": "Logout",
     "name": "Name",
     "newUpdateAvailable": "New update available",
+    "downloadingUpdate": "Downloading update...",
     "ok": "Ok",
     "pause": "Pause",
     "preparing": "Preparing",

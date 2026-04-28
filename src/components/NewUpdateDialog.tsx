@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Dimensions } from 'react-native';
 import { Portal } from 'react-native-paper';
-import * as Linking from 'expo-linking';
 import { ScrollView } from 'react-native-gesture-handler';
 import Button from './Button/Button';
 import { getString } from '@strings/translations';
@@ -10,6 +9,8 @@ import { useTheme } from '@hooks/persisted';
 import { Modal } from '@components';
 
 import { GithubUpdateRelease } from '@hooks/common/useGithubUpdateChecker';
+import NativeDownloadManager from '@specs/NativeDownloadManager';
+import { showToast } from '@utils/showToast';
 
 interface NewUpdateDialogProps {
   newVersion: GithubUpdateRelease;
@@ -43,7 +44,16 @@ const NewUpdateDialog: React.FC<NewUpdateDialogProps> = ({ newVersion }) => {
           />
           <Button
             title={getString('common.install')}
-            onPress={() => Linking.openURL(newVersion.downloadUrl)}
+            onPress={() => {
+              showNewUpdateDialog(false);
+              showToast(getString('common.downloadingUpdate'));
+              NativeDownloadManager.downloadApk(
+                newVersion.downloadUrl,
+                `LNReader Update ${newVersion.tag_name}`,
+                newVersion.body.split('\n')[0] ||
+                  getString('common.downloadingUpdate'),
+              );
+            }}
           />
         </View>
       </Modal>
