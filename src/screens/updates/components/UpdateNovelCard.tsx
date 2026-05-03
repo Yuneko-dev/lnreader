@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View, Image } from 'react-native';
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   ChapterInfo,
@@ -69,6 +69,14 @@ const UpdateNovelCard: React.FC<UpdateCardProps> = ({
     getDetailedUpdates,
     onlyDownloadedChapters,
   ]);
+
+  // Auto-fetch chapter details when only overview data is provided
+  useEffect(() => {
+    if (chapterListInfoRaw && chapterList.length === 0) {
+      updateList();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDownloadChapter = useCallback(
     (chapter: ChapterInfo) => {
