@@ -472,6 +472,8 @@ export interface StringMap {
   'readerScreen.bottomSheet.translateTab.temperature': 'string';
   'readerScreen.bottomSheet.translateTab.preTranslateNextChapter': 'string';
   'readerScreen.bottomSheet.translateTab.downloadTranslated': 'string';
+  'readerScreen.bottomSheet.translateTab.baseUrlReverseProxy': 'string';
+  'readerScreen.bottomSheet.translateTab.baseUrlPlaceholder': 'string';
   'readerScreen.drawer.scrollToBottom': 'string';
   'readerScreen.drawer.scrollToCurrentChapter': 'string';
   'readerScreen.drawer.scrollToTop': 'string';

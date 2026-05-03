@@ -38,7 +38,7 @@ const PROVIDERS: {
   {
     label: 'Google Gemini',
     value: 'gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    endpoint: '',
   },
   { label: 'xAI', value: 'xai', endpoint: 'https://api.x.ai/v1' },
   {
@@ -336,12 +336,25 @@ const TranslateTab: React.FC = () => {
                 ))}
               </Menu>
 
-              {llmProvider === 'custom' && (
+              {(llmProvider === 'custom' || llmProvider === 'gemini') && (
                 <TextInput
                   render={props => <BottomSheetTextInput {...(props as any)} />}
-                  label={getString(
-                    'readerScreen.bottomSheet.translateTab.endpointUrl',
-                  )}
+                  label={
+                    llmProvider === 'gemini'
+                      ? getString(
+                          'readerScreen.bottomSheet.translateTab.baseUrlReverseProxy',
+                        )
+                      : getString(
+                          'readerScreen.bottomSheet.translateTab.endpointUrl',
+                        )
+                  }
+                  placeholder={
+                    llmProvider === 'gemini'
+                      ? getString(
+                          'readerScreen.bottomSheet.translateTab.baseUrlPlaceholder',
+                        )
+                      : undefined
+                  }
                   value={llmEndpoint}
                   onChangeText={text =>
                     setTranslateSettings({ llmEndpoint: text })

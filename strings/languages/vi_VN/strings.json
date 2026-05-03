@@ -553,7 +553,9 @@
         "targetLanguage": "Ngôn ngữ đích",
         "translationSettings": "Cài đặt dịch",
         "preTranslateNextChapter": "Dịch trước chương tiếp theo",
-        "downloadTranslated": "Tải xuống bản dịch thay thế cho bản gốc"
+        "downloadTranslated": "Tải xuống bản dịch thay thế cho bản gốc",
+        "baseUrlReverseProxy": "Base URL (Reverse Proxy)",
+        "baseUrlPlaceholder": "Để trống để dùng API chính thức"
       },
       "useChapterDrawerSwipeNavigation": "Vuốt để mở ngăn chương",
       "verticalSeekbar": "Thanh tua dọc",

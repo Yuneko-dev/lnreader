@@ -558,7 +558,9 @@
         "apiModeChatCompletions": "Chat Completions (Classic)",
         "temperature": "Temperature",
         "preTranslateNextChapter": "Pre-translate next chapter",
-        "downloadTranslated": "Download translated version instead of raw"
+        "downloadTranslated": "Download translated version instead of raw",
+        "baseUrlReverseProxy": "Base URL (Reverse Proxy)",
+        "baseUrlPlaceholder": "Leave empty for official API"
       }
     },
     "drawer": {

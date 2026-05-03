@@ -63,7 +63,13 @@ export class LLMTranslateEngine implements TranslateEngine {
 
   createClient = () => {
     if (this.config.provider === 'gemini') {
-      return new GoogleGenAI({ apiKey: this.config.apiKey });
+      const options: { apiKey: string; httpOptions?: { baseUrl: string } } = {
+        apiKey: this.config.apiKey,
+      };
+      if (this.config.endpoint) {
+        options.httpOptions = { baseUrl: this.config.endpoint };
+      }
+      return new GoogleGenAI(options);
     } else {
       return new OpenAI({
         baseURL: this.config.endpoint || 'https://api.openai.com/v1',
