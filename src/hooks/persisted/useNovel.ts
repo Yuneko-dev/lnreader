@@ -484,6 +484,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
             return {
               ...chapter,
               unread: true,
+              progress: 0,
             };
           }
           return chapter;

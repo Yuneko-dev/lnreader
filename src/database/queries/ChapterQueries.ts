@@ -105,7 +105,7 @@ export const markChaptersUnread = async (
   }
   await dbManager.write(async tx => {
     tx.update(chapterSchema)
-      .set({ unread: true })
+      .set({ unread: true, progress: 0 })
       .where(inArray(chapterSchema.id, chapterIds))
       .run();
   });
