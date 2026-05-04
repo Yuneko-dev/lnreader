@@ -38,7 +38,7 @@ export const insertChapters = async (
     return;
   }
   await dbManager.write(async tx => {
-    const BATCH_SIZE = 500;
+    const BATCH_SIZE = 100;
     for (let i = 0; i < chapters.length; i += BATCH_SIZE) {
       const batch = chapters.slice(i, i + BATCH_SIZE).map((c, idx) => ({
         path: c.path,
