@@ -26,12 +26,14 @@ import { SwipeAction } from '@hooks/persisted/useSettings';
  * Width of the action panel that Swipeable measures as its "open" position.
  * Keep this small so the snap-back animation is fast and natural.
  */
-const ACTION_WIDTH = 90;
+const ACTION_WIDTH = 120;
+
+const ICON_SIZE = 20;
 
 /**
  * Drag distance at which the visual indicator (icon + color) appears.
  */
-const VISUAL_THRESHOLD = 70;
+const VISUAL_THRESHOLD = ACTION_WIDTH - ICON_SIZE;
 
 // ────────────────────────────────────────────────────────────────────────────
 // Swipe action background + icon (rendered behind the chapter row)
@@ -81,7 +83,7 @@ const SwipeActionView = React.memo(
       const absX = Math.abs(dragX.value);
       const progress = interpolate(
         absX,
-        [VISUAL_THRESHOLD - 20, VISUAL_THRESHOLD],
+        [VISUAL_THRESHOLD - ICON_SIZE, VISUAL_THRESHOLD],
         [0, 1],
         Extrapolation.CLAMP,
       );
@@ -209,9 +211,6 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
 
   const executeAction = useCallback(
     (action: SwipeAction) => {
-      if (!disableHapticFeedback) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
       switch (action) {
         case 'bookmark':
           onToggleBookmark?.(chapter);
@@ -344,21 +343,23 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
   const swipeableRef = React.useRef<any>(null);
 
   /**
-   * ReanimatedSwipeable direction mapping:
-   *   onSwipeableOpen('right') = user swiped right → swipeActionRight
-   *   onSwipeableOpen('left')  = user swiped left  → swipeActionLeft
+   * Use onSwipeableWillOpen instead of onSwipeableOpen to trigger immediately
+   * upon release, eliminating the pause where the panel waits at ACTION_WIDTH.
    */
-  const onSwipeableOpen = useCallback(
+  const onSwipeableWillOpen = useCallback(
     (direction: 'left' | 'right') => {
       const action = direction === 'right' ? effectiveRight : effectiveLeft;
-      console.log(
-        `[Swipe] direction=${direction}, action=${action}, ` +
-          `effectiveRight=${effectiveRight}, effectiveLeft=${effectiveLeft}`,
-      );
-      executeAction(action);
+
+      // 1. Immediately force the panel to spring back to 0
       swipeableRef.current?.close();
+
+      // 2. Delay the heavy JS execution (DB writes, state updates) slightly
+      // so the close animation has time to start rendering smoothly on the UI thread.
+      requestAnimationFrame(() => {
+        executeAction(action);
+      });
     },
-    [swipeActionLeft, swipeActionRight, executeAction],
+    [effectiveLeft, effectiveRight, executeAction],
   );
 
   // ── Visual styles ──────────────────────────────────────────────────────
@@ -488,13 +489,11 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
         ref={swipeableRef}
         renderLeftActions={leftActionConfig ? renderLeftActions : undefined}
         renderRightActions={rightActionConfig ? renderRightActions : undefined}
-        onSwipeableOpen={onSwipeableOpen}
-        overshootLeft={false}
-        overshootRight={false}
+        onSwipeableWillOpen={onSwipeableWillOpen}
         overshootFriction={8}
-        friction={2}
-        leftThreshold={ACTION_WIDTH}
-        rightThreshold={ACTION_WIDTH}
+        friction={1.5}
+        leftThreshold={VISUAL_THRESHOLD}
+        rightThreshold={VISUAL_THRESHOLD}
       >
         {chapterContent}
       </Swipeable>
