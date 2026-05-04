@@ -178,8 +178,11 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
   const { id, name, unread, releaseTime, bookmark, chapterNumber, progress } =
     chapter;
 
-  const { swipeActionLeft, swipeActionRight, disableHapticFeedback } =
-    useAppSettings();
+  const {
+    swipeActionLeft = 'disabled' as SwipeAction,
+    swipeActionRight = 'disabled' as SwipeAction,
+    disableHapticFeedback,
+  } = useAppSettings();
 
   isBookmarked ??= bookmark ?? false;
 
@@ -288,15 +291,21 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
    *   → We use the user's "swipeActionLeft" setting
    */
 
+  // Resolve effective action: disable download for local novels
+  const effectiveRight =
+    swipeActionRight === 'download' && isLocal ? 'disabled' : swipeActionRight;
+  const effectiveLeft =
+    swipeActionLeft === 'download' && isLocal ? 'disabled' : swipeActionLeft;
+
   const leftActionConfig = useMemo(() => {
-    if (!swipeEnabled || swipeActionRight === 'disabled') return null;
-    return getActionStyles(swipeActionRight);
-  }, [swipeEnabled, swipeActionRight, getActionStyles]);
+    if (!swipeEnabled || effectiveRight === 'disabled') return null;
+    return getActionStyles(effectiveRight);
+  }, [swipeEnabled, effectiveRight, getActionStyles]);
 
   const rightActionConfig = useMemo(() => {
-    if (!swipeEnabled || swipeActionLeft === 'disabled') return null;
-    return getActionStyles(swipeActionLeft);
-  }, [swipeEnabled, swipeActionLeft, getActionStyles]);
+    if (!swipeEnabled || effectiveLeft === 'disabled') return null;
+    return getActionStyles(effectiveLeft);
+  }, [swipeEnabled, effectiveLeft, getActionStyles]);
 
   const renderLeftActions = useCallback(
     (_progress: SharedValue<number>, dragX: SharedValue<number>) => {
@@ -341,10 +350,10 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
    */
   const onSwipeableOpen = useCallback(
     (direction: 'left' | 'right') => {
-      const action = direction === 'right' ? swipeActionRight : swipeActionLeft;
+      const action = direction === 'right' ? effectiveRight : effectiveLeft;
       console.log(
         `[Swipe] direction=${direction}, action=${action}, ` +
-          `swipeActionRight=${swipeActionRight}, swipeActionLeft=${swipeActionLeft}`,
+          `effectiveRight=${effectiveRight}, effectiveLeft=${effectiveLeft}`,
       );
       executeAction(action);
       swipeableRef.current?.close();
