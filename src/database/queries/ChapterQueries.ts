@@ -37,39 +37,34 @@ export const insertChapters = async (
   if (!chapters?.length) {
     return;
   }
-  await dbManager.batch(
-    chapters.map((c, i) => ({
-      path: c.path,
-      name: c.name || 'Chapter ' + (i + 1),
-      releaseTime: c.releaseTime || '',
-      chapterNumber: c.chapterNumber ?? null,
-      page: c.page || '1',
-      position: i,
-    })),
-    (tx, ph) =>
-      tx
-        .insert(chapterSchema)
-        .values({
-          path: ph('path'),
-          name: ph('name'),
-          releaseTime: ph('releaseTime'),
-          novelId,
-          chapterNumber: ph('chapterNumber'),
-          page: ph('page'),
-          position: ph('position'),
-        })
+  await dbManager.write(async tx => {
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < chapters.length; i += BATCH_SIZE) {
+      const batch = chapters.slice(i, i + BATCH_SIZE).map((c, idx) => ({
+        path: c.path,
+        name: c.name || 'Chapter ' + (i + idx + 1),
+        releaseTime: c.releaseTime || '',
+        chapterNumber: c.chapterNumber ?? null,
+        page: c.page || '1',
+        position: i + idx,
+        novelId,
+      }));
+
+      tx.insert(chapterSchema)
+        .values(batch)
         .onConflictDoUpdate({
           target: [chapterSchema.novelId, chapterSchema.path],
           set: {
-            page: ph('page'),
-            position: ph('position'),
-            name: ph('name'),
-            releaseTime: ph('releaseTime'),
-            chapterNumber: ph('chapterNumber'),
+            page: sql`excluded.page`,
+            position: sql`excluded.position`,
+            name: sql`excluded.name`,
+            releaseTime: sql`excluded.releaseTime`,
+            chapterNumber: sql`excluded.chapterNumber`,
           },
         })
-        .prepare(),
-  );
+        .run();
+    }
+  });
 };
 
 export const markChapterRead = async (chapterId: number): Promise<void> => {
