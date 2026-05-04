@@ -7,7 +7,136 @@ import {
 import { ThemeColors } from '@theme/types';
 import { ChapterInfo } from '@database/types';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons';
+import { MaterialDesignIconName } from '@type/icon';
 import { getString } from '@strings/translations';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import * as Haptics from 'expo-haptics';
+import { useAppSettings } from '@hooks/persisted';
+import Animated, {
+  SharedValue,
+  useAnimatedStyle,
+  useAnimatedReaction,
+  runOnJS,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
+import { SwipeAction } from '@hooks/persisted/useSettings';
+
+/**
+ * Width of the action panel that Swipeable measures as its "open" position.
+ * Keep this small so the snap-back animation is fast and natural.
+ */
+const ACTION_WIDTH = 90;
+
+/**
+ * Drag distance at which the visual indicator (icon + color) appears.
+ */
+const VISUAL_THRESHOLD = 70;
+
+// ────────────────────────────────────────────────────────────────────────────
+// Swipe action background + icon (rendered behind the chapter row)
+// ────────────────────────────────────────────────────────────────────────────
+
+interface SwipeActionViewProps {
+  dragX: SharedValue<number>;
+  backgroundColor: string;
+  icon: MaterialDesignIconName;
+  iconColor: string;
+  side: 'left' | 'right';
+  disableHaptic: boolean;
+}
+
+const SwipeActionView = React.memo(
+  ({
+    dragX,
+    backgroundColor,
+    icon,
+    iconColor,
+    side,
+    disableHaptic,
+  }: SwipeActionViewProps) => {
+    const triggerHaptic = useCallback(() => {
+      if (!disableHaptic) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    }, [disableHaptic]);
+
+    // Fire haptic once when user crosses the visual threshold
+    useAnimatedReaction(
+      () => {
+        if (side === 'left') {
+          return dragX.value >= VISUAL_THRESHOLD;
+        }
+        return dragX.value <= -VISUAL_THRESHOLD;
+      },
+      (active, prev) => {
+        if (active && !prev) {
+          runOnJS(triggerHaptic)();
+        }
+      },
+    );
+
+    // Background color fades in when threshold is crossed
+    const bgStyle = useAnimatedStyle(() => {
+      const absX = Math.abs(dragX.value);
+      const progress = interpolate(
+        absX,
+        [VISUAL_THRESHOLD - 20, VISUAL_THRESHOLD],
+        [0, 1],
+        Extrapolation.CLAMP,
+      );
+      return {
+        opacity: progress,
+      };
+    });
+
+    // Icon fades in and scales up when threshold is crossed
+    const iconStyle = useAnimatedStyle(() => {
+      const absX = Math.abs(dragX.value);
+      const opacity = interpolate(
+        absX,
+        [VISUAL_THRESHOLD - 25, VISUAL_THRESHOLD],
+        [0, 1],
+        Extrapolation.CLAMP,
+      );
+      const scale = interpolate(
+        absX,
+        [VISUAL_THRESHOLD - 25, VISUAL_THRESHOLD],
+        [0.5, 1],
+        Extrapolation.CLAMP,
+      );
+      return {
+        opacity,
+        transform: [{ scale }],
+      };
+    });
+
+    return (
+      <View
+        style={[
+          styles.actionContainer,
+          {
+            justifyContent: 'center',
+            alignItems: side === 'left' ? 'flex-end' : 'flex-start',
+          },
+        ]}
+      >
+        {/* Colored overlay that fades in */}
+        <Animated.View
+          style={[StyleSheet.absoluteFill, { backgroundColor }, bgStyle]}
+        />
+        {/* Icon */}
+        <Animated.View style={[styles.iconWrapper, iconStyle]}>
+          <MaterialCommunityIcons name={icon} color={iconColor} size={24} />
+        </Animated.View>
+      </View>
+    );
+  },
+);
+
+// ────────────────────────────────────────────────────────────────────────────
+// ChapterItem
+// ────────────────────────────────────────────────────────────────────────────
 
 interface ChapterItemProps {
   chapter: ChapterInfo;
@@ -24,6 +153,8 @@ interface ChapterItemProps {
   onDownloadChapter: (chapter: ChapterInfo) => void;
   onSelectPress: (chapter: ChapterInfo) => void;
   onSelectLongPress?: (chapter: ChapterInfo) => void;
+  onToggleRead?: (chapter: ChapterInfo) => void;
+  onToggleBookmark?: (chapter: ChapterInfo) => void;
 }
 
 const ChapterItem: React.FC<ChapterItemProps> = ({
@@ -41,12 +172,24 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
   onDownloadChapter,
   onSelectPress,
   onSelectLongPress,
+  onToggleRead,
+  onToggleBookmark,
 }) => {
   const { id, name, unread, releaseTime, bookmark, chapterNumber, progress } =
     chapter;
 
+  const {
+    swipeActionLeft = 'disabled' as SwipeAction,
+    swipeActionRight = 'disabled' as SwipeAction,
+    disableHapticFeedback,
+  } = useAppSettings();
+
   isBookmarked ??= bookmark ?? false;
 
+  // Swipe is disabled when toggle handlers are not provided (e.g. UpdateNovelCard)
+  const swipeEnabled = !!(onToggleRead && onToggleBookmark);
+
+  // ── Callbacks ──────────────────────────────────────────────────────────
   const handlePress = useCallback(
     () => onSelectPress(chapter),
     [onSelectPress, chapter],
@@ -64,12 +207,167 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
     [onDownloadChapter, chapter],
   );
 
+  const executeAction = useCallback(
+    (action: SwipeAction) => {
+      if (!disableHapticFeedback) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      switch (action) {
+        case 'bookmark':
+          onToggleBookmark?.(chapter);
+          break;
+        case 'markAsRead':
+          onToggleRead?.(chapter);
+          break;
+        case 'download':
+          if (chapter.isDownloaded) {
+            onDeleteChapter(chapter);
+          } else {
+            onDownloadChapter(chapter);
+          }
+          break;
+      }
+    },
+    [
+      disableHapticFeedback,
+      chapter,
+      onToggleBookmark,
+      onToggleRead,
+      onDeleteChapter,
+      onDownloadChapter,
+    ],
+  );
+
+  // ── Action visual config ───────────────────────────────────────────────
+  const getActionStyles = useCallback(
+    (action: SwipeAction) => {
+      switch (action) {
+        case 'bookmark':
+          return {
+            backgroundColor: theme.secondary,
+            icon: (bookmark
+              ? 'bookmark-off'
+              : 'bookmark') as MaterialDesignIconName,
+            color: theme.onSecondary,
+          };
+        case 'markAsRead':
+          return {
+            backgroundColor: theme.primary,
+            icon: (unread ? 'eye-check' : 'eye-off') as MaterialDesignIconName,
+            color: theme.onPrimary,
+          };
+        case 'download':
+          return {
+            backgroundColor: theme.tertiary,
+            icon: (chapter.isDownloaded
+              ? 'delete'
+              : 'download') as MaterialDesignIconName,
+            color: theme.onTertiary,
+          };
+        default:
+          return {
+            backgroundColor: 'transparent',
+            icon: 'blank' as MaterialDesignIconName,
+            color: 'transparent',
+          };
+      }
+    },
+    [theme, bookmark, unread, chapter.isDownloaded],
+  );
+
+  // ── Swipeable config ───────────────────────────────────────────────────
+
+  /*
+   * DIRECTION MAPPING (ReanimatedSwipeable):
+   *
+   * User drags LEFT→RIGHT ("swipe right"):
+   *   → Reveals the LEFT action panel (renderLeftActions)
+   *   → toValue = +leftWidth → onSwipeableOpen('right')
+   *   → We use the user's "swipeActionRight" setting
+   *
+   * User drags RIGHT→LEFT ("swipe left"):
+   *   → Reveals the RIGHT action panel (renderRightActions)
+   *   → toValue = -rightWidth → onSwipeableOpen('left')
+   *   → We use the user's "swipeActionLeft" setting
+   */
+
+  // Resolve effective action: disable download for local novels
+  const effectiveRight =
+    swipeActionRight === 'download' && isLocal ? 'disabled' : swipeActionRight;
+  const effectiveLeft =
+    swipeActionLeft === 'download' && isLocal ? 'disabled' : swipeActionLeft;
+
+  const leftActionConfig = useMemo(() => {
+    if (!swipeEnabled || effectiveRight === 'disabled') return null;
+    return getActionStyles(effectiveRight);
+  }, [swipeEnabled, effectiveRight, getActionStyles]);
+
+  const rightActionConfig = useMemo(() => {
+    if (!swipeEnabled || effectiveLeft === 'disabled') return null;
+    return getActionStyles(effectiveLeft);
+  }, [swipeEnabled, effectiveLeft, getActionStyles]);
+
+  const renderLeftActions = useCallback(
+    (_progress: SharedValue<number>, dragX: SharedValue<number>) => {
+      if (!leftActionConfig) return null;
+      return (
+        <SwipeActionView
+          dragX={dragX}
+          backgroundColor={leftActionConfig.backgroundColor}
+          icon={leftActionConfig.icon}
+          iconColor={leftActionConfig.color}
+          side="left"
+          disableHaptic={!!disableHapticFeedback}
+        />
+      );
+    },
+    [leftActionConfig, disableHapticFeedback],
+  );
+
+  const renderRightActions = useCallback(
+    (_progress: SharedValue<number>, dragX: SharedValue<number>) => {
+      if (!rightActionConfig) return null;
+      return (
+        <SwipeActionView
+          dragX={dragX}
+          backgroundColor={rightActionConfig.backgroundColor}
+          icon={rightActionConfig.icon}
+          iconColor={rightActionConfig.color}
+          side="right"
+          disableHaptic={!!disableHapticFeedback}
+        />
+      );
+    },
+    [rightActionConfig, disableHapticFeedback],
+  );
+
+  const swipeableRef = React.useRef<any>(null);
+
+  /**
+   * ReanimatedSwipeable direction mapping:
+   *   onSwipeableOpen('right') = user swiped right → swipeActionRight
+   *   onSwipeableOpen('left')  = user swiped left  → swipeActionLeft
+   */
+  const onSwipeableOpen = useCallback(
+    (direction: 'left' | 'right') => {
+      const action = direction === 'right' ? effectiveRight : effectiveLeft;
+      console.log(
+        `[Swipe] direction=${direction}, action=${action}, ` +
+          `effectiveRight=${effectiveRight}, effectiveLeft=${effectiveLeft}`,
+      );
+      executeAction(action);
+      swipeableRef.current?.close();
+    },
+    [swipeActionLeft, swipeActionRight, executeAction],
+  );
+
+  // ── Visual styles ──────────────────────────────────────────────────────
   const selectedStyle = useMemo(
     () =>
       isSelected
         ? [styles.chapterCardContainer, { backgroundColor: theme.rippleColor }]
-        : styles.chapterCardContainer,
-    [isSelected, theme.rippleColor],
+        : [styles.chapterCardContainer, { backgroundColor: theme.surface }],
+    [isSelected, theme.rippleColor, theme.surface],
   );
 
   const titleColor = useMemo(
@@ -98,86 +396,108 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
     marginStart: chapter.releaseTime ? 5 : 0,
   } as const;
 
-  return (
-    <View key={'chapterItem' + id}>
-      <Pressable
-        style={selectedStyle}
-        onPress={handlePress}
-        onLongPress={handleLongPress}
-        android_ripple={ripple}
-      >
-        <View style={styles.row}>
-          {left}
-          {isBookmarked ? <ChapterBookmarkButton theme={theme} /> : null}
-          <View style={styles.flex1}>
-            {isUpdateCard ? (
+  // ── Render ─────────────────────────────────────────────────────────────
+  const chapterContent = (
+    <Pressable
+      style={selectedStyle}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
+      android_ripple={ripple}
+    >
+      <View style={styles.row}>
+        {left}
+        {isBookmarked ? <ChapterBookmarkButton theme={theme} /> : null}
+        <View style={styles.flex1}>
+          {isUpdateCard ? (
+            <Text
+              style={[
+                styles.updateCardName,
+                { color: unread ? theme.onSurface : theme.outline },
+              ]}
+              numberOfLines={1}
+            >
+              {novelName}
+            </Text>
+          ) : null}
+          <View style={styles.titleRow}>
+            {unread ? (
+              <MaterialCommunityIcons
+                name="circle"
+                color={theme.primary}
+                size={8}
+                style={styles.unreadIcon}
+              />
+            ) : null}
+
+            <Text
+              style={[
+                isUpdateCard ? styles.textSmall : styles.textNormal,
+                { color: titleColor },
+                styles.flex1,
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {showChapterTitles
+                ? name
+                : getString('novelScreen.chapterChapnum', {
+                    num: chapterNumber,
+                  })}
+            </Text>
+          </View>
+          <View style={styles.metaRow}>
+            {releaseTime && !isUpdateCard ? (
               <Text
-                style={[
-                  styles.updateCardName,
-                  { color: unread ? theme.onSurface : theme.outline },
-                ]}
+                style={[{ color: releaseColor }, styles.mt4, styles.text]}
                 numberOfLines={1}
               >
-                {novelName}
+                {releaseTime}
               </Text>
             ) : null}
-            <View style={styles.titleRow}>
-              {unread ? (
-                <MaterialCommunityIcons
-                  name="circle"
-                  color={theme.primary}
-                  size={8}
-                  style={styles.unreadIcon}
-                />
-              ) : null}
-
+            {!isUpdateCard && progress && progress > 0 && chapter.unread ? (
               <Text
-                style={[
-                  isUpdateCard ? styles.textSmall : styles.textNormal,
-                  { color: titleColor },
-                  styles.flex1,
-                ]}
+                style={[styles.text, styles.mt4, releaseTimeStyle]}
                 numberOfLines={1}
-                ellipsizeMode="tail"
               >
-                {showChapterTitles
-                  ? name
-                  : getString('novelScreen.chapterChapnum', {
-                      num: chapterNumber,
-                    })}
+                {chapter.releaseTime ? '•  ' : null}
+                {getString('novelScreen.progress', { progress })}
               </Text>
-            </View>
-            <View style={styles.metaRow}>
-              {releaseTime && !isUpdateCard ? (
-                <Text
-                  style={[{ color: releaseColor }, styles.mt4, styles.text]}
-                  numberOfLines={1}
-                >
-                  {releaseTime}
-                </Text>
-              ) : null}
-              {!isUpdateCard && progress && progress > 0 && chapter.unread ? (
-                <Text
-                  style={[styles.text, styles.mt4, releaseTimeStyle]}
-                  numberOfLines={1}
-                >
-                  {chapter.releaseTime ? '•  ' : null}
-                  {getString('novelScreen.progress', { progress })}
-                </Text>
-              ) : null}
-            </View>
+            ) : null}
           </View>
         </View>
-        {!isLocal ? (
-          <DownloadButton
-            isDownloading={isDownloading}
-            isDownloaded={chapter.isDownloaded ?? false}
-            theme={theme}
-            deleteChapter={handleDelete}
-            downloadChapter={handleDownload}
-          />
-        ) : null}
-      </Pressable>
+      </View>
+      {!isLocal ? (
+        <DownloadButton
+          isDownloading={isDownloading}
+          isDownloaded={chapter.isDownloaded ?? false}
+          theme={theme}
+          deleteChapter={handleDelete}
+          downloadChapter={handleDownload}
+        />
+      ) : null}
+    </Pressable>
+  );
+
+  if (!swipeEnabled) {
+    return <View key={'chapterItem' + id}>{chapterContent}</View>;
+  }
+
+  return (
+    <View key={'chapterItem' + id}>
+      <Swipeable
+        ref={swipeableRef}
+        renderLeftActions={leftActionConfig ? renderLeftActions : undefined}
+        renderRightActions={rightActionConfig ? renderRightActions : undefined}
+        onSwipeableOpen={onSwipeableOpen}
+        overshootLeft={false}
+        overshootRight={false}
+        overshootFriction={8}
+        friction={2}
+        leftThreshold={ACTION_WIDTH}
+        rightThreshold={ACTION_WIDTH}
+      >
+        {chapterContent}
+      </Swipeable>
     </View>
   );
 };
@@ -185,6 +505,14 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
 export default memo(ChapterItem);
 
 const styles = StyleSheet.create({
+  actionContainer: {
+    width: ACTION_WIDTH,
+    height: '100%',
+    overflow: 'hidden',
+  },
+  iconWrapper: {
+    paddingHorizontal: 24,
+  },
   chapterCardContainer: {
     alignItems: 'center',
     flexDirection: 'row',

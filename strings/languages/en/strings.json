@@ -288,6 +288,7 @@
   },
   "generalSettings": "General",
   "generalSettingsScreen": {
+    "preferences": "Preferences",
     "asc": "(Ascending)",
     "autoDownload": "Auto-download",
     "bySource": "By source",
@@ -695,5 +696,12 @@
     "LOCAL_RESTORE": "Local Restore",
     "MIGRATE_NOVEL": "Migrating Novel",
     "DOWNLOAD_CHAPTER": "Downloading Chapter"
-  }
+  },
+  "swipeActions": "Swipe actions",
+  "swipeActionLeft": "Left swipe action",
+  "swipeActionRight": "Right swipe action",
+  "swipeActionDisabled": "Disabled",
+  "swipeActionBookmark": "Bookmark chapter",
+  "swipeActionMarkAsRead": "Mark as read",
+  "swipeActionDownload": "Download chapter"
 }

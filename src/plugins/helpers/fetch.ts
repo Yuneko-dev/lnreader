@@ -49,7 +49,7 @@ async function applyCookieFromRequest(url: string, init: FetchInit) {
     cookieString = init.headers.get('Cookie') || '';
   } else if (init.headers) {
     const cookieKey = Object.keys(init.headers).find(
-      k => k.toLowerCase() === 'cookie'
+      k => k.toLowerCase() === 'cookie',
     );
     if (cookieKey) {
       cookieString = init.headers[cookieKey];

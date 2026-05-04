@@ -251,6 +251,7 @@ export interface StringMap {
   'downloadScreen.pluginNotFound': 'string';
   'downloadScreen.removeDownloadsWarning': 'string';
   'generalSettings': 'string';
+  'generalSettingsScreen.preferences': 'string';
   'generalSettingsScreen.asc': 'string';
   'generalSettingsScreen.autoDownload': 'string';
   'generalSettingsScreen.bySource': 'string';
@@ -584,4 +585,11 @@ export interface StringMap {
   'notifications.LOCAL_RESTORE': 'string';
   'notifications.MIGRATE_NOVEL': 'string';
   'notifications.DOWNLOAD_CHAPTER': 'string';
+  'swipeActions': 'string';
+  'swipeActionLeft': 'string';
+  'swipeActionRight': 'string';
+  'swipeActionDisabled': 'string';
+  'swipeActionBookmark': 'string';
+  'swipeActionMarkAsRead': 'string';
+  'swipeActionDownload': 'string';
 }
