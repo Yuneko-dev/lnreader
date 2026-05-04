@@ -140,6 +140,12 @@ export type LLMProviderSupported =
   | 'groq'
   | 'custom';
 
+export interface SystemPrompt {
+  id: string;
+  title: string;
+  content: string;
+}
+
 export interface TranslateSettings {
   engine: 'google-free' | 'llm';
   sourceLang: string;
@@ -148,7 +154,8 @@ export interface TranslateSettings {
   llmEndpoint: string;
   llmApiKey: string;
   llmModel: string;
-  llmSystemPrompt: string;
+  llmSystemPrompts: SystemPrompt[];
+  activeSystemPromptId: string;
   llmEnableReasoning: boolean;
   llmReasoningEffort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
   llmApiMode: 'responses' | 'chat-completions';
@@ -260,7 +267,14 @@ export const initialTranslateSettings: TranslateSettings = {
   llmEndpoint: 'https://api.openai.com/v1',
   llmApiKey: '',
   llmModel: '',
-  llmSystemPrompt: '',
+  llmSystemPrompts: [
+    {
+      id: 'default',
+      title: 'Default',
+      content: '',
+    },
+  ],
+  activeSystemPromptId: 'default',
   llmEnableReasoning: false,
   llmReasoningEffort: 'low',
   llmApiMode: 'responses',
