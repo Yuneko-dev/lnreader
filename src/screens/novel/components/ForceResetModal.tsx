@@ -184,8 +184,7 @@ export default function ForceResetModal({
             {reloadChapters ? (
               <View style={[styles.row]}>
                 <Text style={[{ color: theme.onSurface, flex: 1 }]}>
-                  ╰─{' '}
-                  {getString('novelScreen.forceResetModal.deleteDownloads')}
+                  ╰─ {getString('novelScreen.forceResetModal.deleteDownloads')}
                 </Text>
                 <Switch
                   value={deleteDownloads}

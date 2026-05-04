@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 
 import DisplayModeModal from './modals/DisplayModeModal';
 import GridSizeModal from './modals/GridSizeModal';
+import SwipeActionModal from './modals/SwipeActionModal';
 
 import {
   useAppSettings,
@@ -58,6 +59,8 @@ const GenralSettings: React.FC<GenralSettingsProps> = ({ navigation }) => {
     refreshNovelMetadata,
     disableHapticFeedback,
     useLibraryFAB,
+    swipeActionLeft,
+    swipeActionRight,
     setAppSettings,
   } = useAppSettings();
 
@@ -76,6 +79,12 @@ const GenralSettings: React.FC<GenralSettingsProps> = ({ navigation }) => {
     }
     return res.join(', ');
   };
+
+  /**
+   * Swipe Action Modals
+   */
+  const swipeActionLeftModalRef = useBoolean();
+  const swipeActionRightModalRef = useBoolean();
 
   /**
    * Display Mode Modal
@@ -223,6 +232,38 @@ const GenralSettings: React.FC<GenralSettingsProps> = ({ navigation }) => {
           />
           <List.Divider theme={theme} />
           <List.SubHeader theme={theme}>
+            {getString('generalSettingsScreen.preferences')}
+          </List.SubHeader>
+          <List.Item
+            title={getString('swipeActionLeft')}
+            description={getString(
+              swipeActionLeft === 'markAsRead'
+                ? 'swipeActionMarkAsRead'
+                : swipeActionLeft === 'bookmark'
+                ? 'swipeActionBookmark'
+                : swipeActionLeft === 'download'
+                ? 'swipeActionDownload'
+                : 'swipeActionDisabled',
+            )}
+            onPress={swipeActionLeftModalRef.setTrue}
+            theme={theme}
+          />
+          <List.Item
+            title={getString('swipeActionRight')}
+            description={getString(
+              swipeActionRight === 'bookmark'
+                ? 'swipeActionBookmark'
+                : swipeActionRight === 'markAsRead'
+                ? 'swipeActionMarkAsRead'
+                : swipeActionRight === 'download'
+                ? 'swipeActionDownload'
+                : 'swipeActionDisabled',
+            )}
+            onPress={swipeActionRightModalRef.setTrue}
+            theme={theme}
+          />
+          <List.Divider theme={theme} />
+          <List.SubHeader theme={theme}>
             {getString('generalSettings')}
           </List.SubHeader>
           <SettingSwitch
@@ -262,6 +303,20 @@ const GenralSettings: React.FC<GenralSettingsProps> = ({ navigation }) => {
         displayModalVisible={defaultChapterSortModal.value}
         hideDisplayModal={defaultChapterSortModal.setFalse}
         setAppSettings={setAppSettings}
+        theme={theme}
+      />
+      <SwipeActionModal
+        actionType="left"
+        currentAction={swipeActionLeft}
+        modalVisible={swipeActionLeftModalRef.value}
+        hideModal={swipeActionLeftModalRef.setFalse}
+        theme={theme}
+      />
+      <SwipeActionModal
+        actionType="right"
+        currentAction={swipeActionRight}
+        modalVisible={swipeActionRightModalRef.value}
+        hideModal={swipeActionRightModalRef.setFalse}
         theme={theme}
       />
       <GridSizeModal

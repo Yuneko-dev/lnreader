@@ -124,7 +124,9 @@ Task: Translate the following text from ${source} to ${target}.
       i = setInterval(() => {
         if (onProgress) {
           const elapsedTime = Date.now() - startTime;
-          onProgress(maxProgress * (1 - Math.exp(-elapsedTime / estimatedTimeMs)));
+          onProgress(
+            maxProgress * (1 - Math.exp(-elapsedTime / estimatedTimeMs)),
+          );
         }
       }, 100);
 
@@ -214,17 +216,20 @@ Task: Translate the following text from ${source} to ${target}.
         const client = this.createClient() as OpenAI;
 
         if (this.config.apiMode === 'chat-completions') {
-          const response = await client.chat.completions.create({
-            model: this.config.model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt },
-            ],
-            temperature: this.config.temperature ?? 0.6,
-            store: false,
-          }, {
-            signal,
-          });
+          const response = await client.chat.completions.create(
+            {
+              model: this.config.model,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              temperature: this.config.temperature ?? 0.6,
+              store: false,
+            },
+            {
+              signal,
+            },
+          );
           resultText = response.choices[0]?.message?.content || '';
           errorMessage =
             response.choices[0]?.finish_reason === 'content_filter'
@@ -246,15 +251,18 @@ Task: Translate the following text from ${source} to ${target}.
               // summary: 'detailed',
             };
           }
-          const response = await client.responses.create({
-            model: this.config.model,
-            instructions: systemPrompt,
-            input: userPrompt,
-            store: false,
-            reasoning: reasoningConfig,
-          }, {
-            signal,
-          });
+          const response = await client.responses.create(
+            {
+              model: this.config.model,
+              instructions: systemPrompt,
+              input: userPrompt,
+              store: false,
+              reasoning: reasoningConfig,
+            },
+            {
+              signal,
+            },
+          );
           resultText = response.output_text;
           errorMessage = response.incomplete_details?.reason;
           if (__DEV__) {

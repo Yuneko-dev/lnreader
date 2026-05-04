@@ -328,14 +328,16 @@ describe('ChapterQueries', () => {
     it('should batch insert chapters correctly when exceeding BATCH_SIZE', async () => {
       const testDb = getTestDb();
       const novelId = await insertTestNovel(testDb, { inLibrary: true });
-      
+
       const numChaptersToInsert = 1009;
-      const chaptersToInsert = Array.from({ length: numChaptersToInsert }).map((_, i) => ({
-        path: `/chapter/${i}`,
-        name: `Chapter ${i}`,
-        chapterNumber: i,
-        page: '1',
-      }));
+      const chaptersToInsert = Array.from({ length: numChaptersToInsert }).map(
+        (_, i) => ({
+          path: `/chapter/${i}`,
+          name: `Chapter ${i}`,
+          chapterNumber: i,
+          page: '1',
+        }),
+      );
 
       await insertChapters(novelId, chaptersToInsert);
 
@@ -343,7 +345,9 @@ describe('ChapterQueries', () => {
       chapters.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
       expect(chapters).toHaveLength(numChaptersToInsert);
       expect(chapters[0].position).toBe(0);
-      expect(chapters[numChaptersToInsert - 1].position).toBe(numChaptersToInsert - 1);
+      expect(chapters[numChaptersToInsert - 1].position).toBe(
+        numChaptersToInsert - 1,
+      );
     });
   });
 

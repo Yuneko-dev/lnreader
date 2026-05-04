@@ -288,6 +288,7 @@
   },
   "generalSettings": "Chung",
   "generalSettingsScreen": {
+    "preferences": "Tùy chỉnh ưu tiên",
     "asc": "(Tăng dần)",
     "autoDownload": "Tự động tải xuống",
     "bySource": "Theo nguồn",
@@ -694,5 +695,12 @@
     "LOCAL_RESTORE": "Khôi phục cục bộ",
     "MIGRATE_NOVEL": "Đang chuyển nguồn truyện",
     "DOWNLOAD_CHAPTER": "Đang tải chương"
-  }
+  },
+  "swipeActions": "Hành động vuốt",
+  "swipeActionLeft": "Hành động vuốt trái",
+  "swipeActionRight": "Hành động vuốt phải",
+  "swipeActionDisabled": "Vô hiệu hóa",
+  "swipeActionBookmark": "Đánh dấu chương",
+  "swipeActionMarkAsRead": "Đánh dấu là đã đọc",
+  "swipeActionDownload": "Tải xuống chương"
 }

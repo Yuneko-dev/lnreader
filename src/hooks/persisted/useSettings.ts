@@ -16,6 +16,8 @@ export const CHAPTER_READER_SETTINGS = 'CHAPTER_READER_SETTINGS';
 export const TRANSLATE_SETTINGS = 'TRANSLATE_SETTINGS';
 export const SECURITY_SETTINGS = 'SECURITY_SETTINGS';
 
+export type SwipeAction = 'disabled' | 'bookmark' | 'markAsRead' | 'download';
+
 export interface AppSettings {
   /**
    * General settings
@@ -58,6 +60,8 @@ export interface AppSettings {
   hideBackdrop: boolean;
   defaultChapterSort: ChapterOrderKey;
   clearCacheOnExit: boolean;
+  swipeActionLeft: SwipeAction;
+  swipeActionRight: SwipeAction;
 }
 
 export interface BrowseSettings {
@@ -195,6 +199,8 @@ const initialAppSettings: AppSettings = {
   hideBackdrop: false,
   defaultChapterSort: 'positionAsc',
   clearCacheOnExit: false,
+  swipeActionLeft: 'disabled',
+  swipeActionRight: 'disabled',
 };
 
 const initialBrowseSettings: BrowseSettings = {

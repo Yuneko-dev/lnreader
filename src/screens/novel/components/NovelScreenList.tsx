@@ -78,6 +78,9 @@ const NovelScreenList = ({
     pageIndex,
     openPage,
     updateChapter,
+    markChapterRead,
+    markChaptersUnread,
+    bookmarkChapters,
   } = useNovelContext();
 
   const { pluginId } = routeBaseNovel;
@@ -238,6 +241,24 @@ const NovelScreenList = ({
       }
     },
     [novel, downloadChapter],
+  );
+
+  const handleToggleRead = useCallback(
+    (chapter: ChapterInfo) => {
+      if (chapter.unread) {
+        markChapterRead(chapter.id);
+      } else {
+        markChaptersUnread([chapter]);
+      }
+    },
+    [markChapterRead, markChaptersUnread],
+  );
+
+  const handleToggleBookmark = useCallback(
+    (chapter: ChapterInfo) => {
+      bookmarkChapters([chapter]);
+    },
+    [bookmarkChapters],
   );
 
   const onRefresh = useCallback(async () => {
@@ -492,6 +513,8 @@ const NovelScreenList = ({
           onDownloadChapter={handleDownloadChapter}
           onSelectPress={onSelectPress}
           onSelectLongPress={onSelectLongPress}
+          onToggleRead={handleToggleRead}
+          onToggleBookmark={handleToggleBookmark}
         />
       );
     },
@@ -507,6 +530,8 @@ const NovelScreenList = ({
       handleDownloadChapter,
       onSelectPress,
       onSelectLongPress,
+      handleToggleRead,
+      handleToggleBookmark,
     ],
   );
 

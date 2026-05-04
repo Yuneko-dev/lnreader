@@ -487,7 +487,9 @@ const TranslateTab: React.FC = () => {
                         'readerScreen.bottomSheet.translateTab.apiModeChatCompletions',
                       )}
                       onPress={() => {
-                        setTranslateSettings({ llmApiMode: 'chat-completions' });
+                        setTranslateSettings({
+                          llmApiMode: 'chat-completions',
+                        });
                         setApiModeMenuVisible(false);
                       }}
                     />
@@ -495,35 +497,36 @@ const TranslateTab: React.FC = () => {
                 </>
               )}
 
-              {llmProvider !== 'gemini' && llmApiMode === 'chat-completions' && (
-                <View style={styles.temperatureSection}>
-                  <View style={styles.temperatureHeader}>
-                    <Text style={{ color: theme.onSurface }}>
-                      {getString(
-                        'readerScreen.bottomSheet.translateTab.temperature',
-                      )}
-                    </Text>
-                    <Text style={{ color: theme.onSurfaceVariant }}>
-                      {(llmTemperature ?? 0.6).toFixed(1)}
-                    </Text>
+              {llmProvider !== 'gemini' &&
+                llmApiMode === 'chat-completions' && (
+                  <View style={styles.temperatureSection}>
+                    <View style={styles.temperatureHeader}>
+                      <Text style={{ color: theme.onSurface }}>
+                        {getString(
+                          'readerScreen.bottomSheet.translateTab.temperature',
+                        )}
+                      </Text>
+                      <Text style={{ color: theme.onSurfaceVariant }}>
+                        {(llmTemperature ?? 0.6).toFixed(1)}
+                      </Text>
+                    </View>
+                    <Slider
+                      style={styles.slider}
+                      minimumValue={0}
+                      maximumValue={2}
+                      step={0.1}
+                      value={llmTemperature ?? 0.6}
+                      onSlidingComplete={val =>
+                        setTranslateSettings({
+                          llmTemperature: Math.round(val * 10) / 10,
+                        })
+                      }
+                      minimumTrackTintColor={theme.primary}
+                      maximumTrackTintColor={theme.surfaceVariant}
+                      thumbTintColor={theme.primary}
+                    />
                   </View>
-                  <Slider
-                    style={styles.slider}
-                    minimumValue={0}
-                    maximumValue={2}
-                    step={0.1}
-                    value={llmTemperature ?? 0.6}
-                    onSlidingComplete={val =>
-                      setTranslateSettings({
-                        llmTemperature: Math.round(val * 10) / 10,
-                      })
-                    }
-                    minimumTrackTintColor={theme.primary}
-                    maximumTrackTintColor={theme.surfaceVariant}
-                    thumbTintColor={theme.primary}
-                  />
-                </View>
-              )}
+                )}
 
               {(llmProvider === 'gemini' || llmApiMode === 'responses') && (
                 <>
@@ -533,7 +536,9 @@ const TranslateTab: React.FC = () => {
                       { paddingHorizontal: 0, paddingTop: 0 },
                     ]}
                   >
-                    <Text style={{ color: theme.onSurface }}>Enable Reasoning</Text>
+                    <Text style={{ color: theme.onSurface }}>
+                      Enable Reasoning
+                    </Text>
                     <Switch
                       value={llmEnableReasoning}
                       onValueChange={val =>

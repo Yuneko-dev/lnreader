@@ -36,7 +36,7 @@ const AdvancedSettings = ({ navigation }: AdvancedSettingsScreenProps) => {
   const clearStorage = () => {
     store.clearAll();
     showToast(getString('webview.storageCleared'));
-  }
+  };
 
   const { userAgent, setUserAgent } = useUserAgent();
   const { verboseLogging, setAppSettings } = useAppSettings();
