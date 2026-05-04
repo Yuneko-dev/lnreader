@@ -23,6 +23,7 @@ import { LLMTranslateEngine } from '@services/translate/LLMTranslateEngine';
 import { showToast } from '@utils/showToast';
 import { useChapterContext } from '@screens/reader/ChapterContext';
 import Slider from '@react-native-community/slider';
+import PromptManagerModal from './PromptManagerModal';
 
 const PROVIDERS: {
   label: string;
@@ -133,7 +134,8 @@ const TranslateTab: React.FC = () => {
     llmEndpoint,
     llmApiKey,
     llmModel,
-    llmSystemPrompt,
+    llmSystemPrompts,
+    activeSystemPromptId,
     llmEnableReasoning,
     llmReasoningEffort,
     llmApiMode,
@@ -166,6 +168,7 @@ const TranslateTab: React.FC = () => {
   const [reasoningEffortMenuVisible, setReasoningEffortMenuVisible] =
     useState(false);
   const [apiModeMenuVisible, setApiModeMenuVisible] = useState(false);
+  const [promptManagerVisible, setPromptManagerVisible] = useState(false);
 
   const getLangLabel = (code: string) => {
     return supportedLanguagesList.find(l => l.value === code)?.label || code;
@@ -423,28 +426,20 @@ const TranslateTab: React.FC = () => {
                 />
               </View>
 
-              <TextInput
-                render={props => <BottomSheetTextInput {...(props as any)} />}
-                label={getString(
-                  'readerScreen.bottomSheet.translateTab.systemPrompt',
-                )}
-                value={llmSystemPrompt}
-                onChangeText={text =>
-                  setTranslateSettings({ llmSystemPrompt: text })
-                }
-                mode="outlined"
-                multiline
-                numberOfLines={4}
-                style={[styles.input, { minHeight: 100 }]}
-                theme={{
-                  colors: {
-                    primary: theme.primary,
-                    background: theme.surface,
-                    onSurface: theme.onSurface,
-                    onSurfaceVariant: theme.onSurfaceVariant,
-                  },
-                }}
-              />
+              <TouchableOpacity
+                style={[styles.settingItem, { paddingHorizontal: 0 }]}
+                onPress={() => setPromptManagerVisible(true)}
+              >
+                <Text style={[styles.label, { color: theme.onSurface }]}>
+                  {getString(
+                    'readerScreen.bottomSheet.translateTab.systemPrompt',
+                  )}
+                </Text>
+                <Text style={[styles.value, { color: theme.onSurfaceVariant }]}>
+                  {llmSystemPrompts?.find(p => p.id === activeSystemPromptId)
+                    ?.title || 'Default'}
+                </Text>
+              </TouchableOpacity>
 
               {llmProvider !== 'gemini' && (
                 <>
@@ -647,6 +642,21 @@ const TranslateTab: React.FC = () => {
           />
         </Modal>
       </Portal>
+
+      <PromptManagerModal
+        visible={promptManagerVisible}
+        onDismiss={() => setPromptManagerVisible(false)}
+        prompts={
+          llmSystemPrompts || [{ id: 'default', title: 'Default', content: '' }]
+        }
+        activePromptId={activeSystemPromptId || 'default'}
+        onUpdatePrompts={prompts =>
+          setTranslateSettings({ llmSystemPrompts: prompts })
+        }
+        onSelectPrompt={id =>
+          setTranslateSettings({ activeSystemPromptId: id })
+        }
+      />
     </>
   );
 };

@@ -11,7 +11,8 @@ export interface TranslateConfig {
   llmEndpoint?: string;
   llmApiKey?: string;
   llmModel?: string;
-  llmSystemPrompt?: string;
+  llmSystemPrompts?: { id: string; title: string; content: string }[];
+  activeSystemPromptId?: string;
   llmEnableReasoning?: boolean;
   llmReasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
   llmApiMode?: 'responses' | 'chat-completions';
@@ -21,12 +22,22 @@ export interface TranslateConfig {
 export class TranslateManager {
   private static getEngine(config: TranslateConfig): TranslateEngine {
     if (config.engine === 'llm') {
+      let finalSystemPrompt = '';
+      if (config.llmSystemPrompts && config.activeSystemPromptId) {
+        const active = config.llmSystemPrompts.find(
+          p => p.id === config.activeSystemPromptId,
+        );
+        if (active) {
+          finalSystemPrompt = active.content;
+        }
+      }
+
       return new LLMTranslateEngine({
         provider: config.llmProvider as any,
         endpoint: config.llmEndpoint || '',
         apiKey: config.llmApiKey || '',
         model: config.llmModel || '',
-        systemPrompt: config.llmSystemPrompt,
+        systemPrompt: finalSystemPrompt,
         enableReasoning: config.llmEnableReasoning,
         reasoningEffort: config.llmReasoningEffort as any,
         apiMode: config.llmApiMode,
