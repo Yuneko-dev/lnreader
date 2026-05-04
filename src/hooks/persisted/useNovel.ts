@@ -414,6 +414,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
           return {
             ...c,
             unread: false,
+            progress: 100,
           };
         }),
       );
@@ -450,6 +451,7 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
             return {
               ...chapter,
               unread: false,
+              progress: 100,
             };
           }
           return chapter;
@@ -465,7 +467,9 @@ export const useNovel = (novelOrPath: string | NovelInfo, pluginId: string) => {
         _markPreviousChaptersUnread(chapterId, novel.id);
         mutateChapters(chs =>
           chs.map(chapter =>
-            chapter.id <= chapterId ? { ...chapter, unread: true } : chapter,
+            chapter.id <= chapterId
+              ? { ...chapter, unread: true, progress: 0 }
+              : chapter,
           ),
         );
       }

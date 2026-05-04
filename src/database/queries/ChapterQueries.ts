@@ -70,7 +70,7 @@ export const insertChapters = async (
 export const markChapterRead = async (chapterId: number): Promise<void> => {
   await dbManager.write(async tx => {
     tx.update(chapterSchema)
-      .set({ unread: false })
+      .set({ unread: false, progress: 100 })
       .where(eq(chapterSchema.id, chapterId))
       .run();
   });
@@ -82,7 +82,7 @@ export const markChaptersRead = async (chapterIds: number[]): Promise<void> => {
   }
   await dbManager.write(async tx => {
     tx.update(chapterSchema)
-      .set({ unread: false })
+      .set({ unread: false, progress: 100 })
       .where(inArray(chapterSchema.id, chapterIds))
       .run();
   });
@@ -91,7 +91,7 @@ export const markChaptersRead = async (chapterIds: number[]): Promise<void> => {
 export const markChapterUnread = async (chapterId: number): Promise<void> => {
   await dbManager.write(async tx => {
     tx.update(chapterSchema)
-      .set({ unread: true })
+      .set({ unread: true, progress: 0 })
       .where(eq(chapterSchema.id, chapterId))
       .run();
   });
@@ -114,7 +114,7 @@ export const markChaptersUnread = async (
 export const markAllChaptersRead = async (novelId: number): Promise<void> => {
   await dbManager.write(async tx => {
     tx.update(chapterSchema)
-      .set({ unread: false })
+      .set({ unread: false, progress: 100 })
       .where(eq(chapterSchema.novelId, novelId))
       .run();
   });
@@ -123,7 +123,7 @@ export const markAllChaptersRead = async (novelId: number): Promise<void> => {
 export const markAllChaptersUnread = async (novelId: number): Promise<void> => {
   await dbManager.write(async tx => {
     tx.update(chapterSchema)
-      .set({ unread: true })
+      .set({ unread: true, progress: 0 })
       .where(eq(chapterSchema.novelId, novelId))
       .run();
   });
@@ -279,7 +279,7 @@ export const markPreviouschaptersRead = async (
 ): Promise<void> => {
   await dbManager.write(async tx => {
     tx.update(chapterSchema)
-      .set({ unread: false })
+      .set({ unread: false, progress: 100 })
       .where(
         and(
           lte(chapterSchema.id, chapterId),
@@ -296,7 +296,7 @@ export const markPreviousChaptersUnread = async (
 ): Promise<void> => {
   await dbManager.write(async tx => {
     tx.update(chapterSchema)
-      .set({ unread: true })
+      .set({ unread: true, progress: 0 })
       .where(
         and(
           lte(chapterSchema.id, chapterId),
