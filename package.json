@@ -76,6 +76,7 @@
     "expo-notifications": "~0.32.16",
     "expo-speech": "~14.0.8",
     "expo-web-browser": "~15.0.10",
+    "html-entities": "^2.6.0",
     "htmlparser2": "^10.1.0",
     "i18n-js": "^4.5.2",
     "lodash-es": "^4.17.23",

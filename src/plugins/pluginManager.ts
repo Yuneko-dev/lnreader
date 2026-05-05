@@ -5,6 +5,10 @@ import { load } from 'cheerio';
 import { Parser } from 'htmlparser2';
 import { reverse, uniqBy } from 'lodash-es';
 import { encode, decode } from 'urlencode';
+import {
+  encode as encodeHtmlEntities,
+  decode as decodeHtmlEntities,
+} from 'html-entities';
 import { Buffer } from 'buffer';
 import CookieManager from '@preeternal/react-native-cookie-manager';
 
@@ -43,7 +47,13 @@ const packages: Record<string, any> = {
   '@libs/filterInputs': { FilterTypes },
   '@libs/defaultCover': { defaultCover },
   '@libs/aes': { gcm, cbc },
-  '@libs/utils': { utf8ToBytes, bytesToUtf8, Buffer },
+  '@libs/utils': {
+    utf8ToBytes,
+    bytesToUtf8,
+    Buffer,
+    encodeHtmlEntities,
+    decodeHtmlEntities,
+  },
   '@libs/cookie': {
     set: CookieManager.set,
     setFromResponse: CookieManager.setFromResponse,
